@@ -266,6 +266,7 @@ export const ChatRowContent = ({
 		vscode.postMessage({ type: "selectImages", context: "edit", messageTs: message.ts })
 	}, [message.ts])
 
+	// kilocode_change: usageMissing, inferenceProvider, modelId
 	const [cost, usageMissing, inferenceProvider, apiReqCancelReason, apiReqStreamingFailedMessage, apiReqModelId] =
 		useMemo(() => {
 			if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
