@@ -824,6 +824,10 @@
 		"showDiffStats": {
 			"label": "Zobrazit statistiky diff",
 			"description": "Zobrazit statistiky přidaných/odebraných řádků v záhlaví úkolu"
+		},
+		"showModelBadge": {
+			"label": "Zobrazit odznak modelu",
+			"description": "Zobrazit název modelu jako odznak u zpráv chatu"
 		}
 	},
 	"autocomplete": {

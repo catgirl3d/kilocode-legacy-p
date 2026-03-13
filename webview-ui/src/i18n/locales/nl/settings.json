@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "Toon diff-statistieken",
 			"description": "Toon statistieken van toegevoegde/verwijderde regels in de taakkop"
+		},
+		"showModelBadge": {
+			"label": "Modelbadge weergeven",
+			"description": "Toon de modelnaam als een badge bij chatberichten"
 		}
 	},
 	"autocomplete": {

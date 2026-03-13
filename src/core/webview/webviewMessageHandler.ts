@@ -2033,6 +2033,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("showDiffStats", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "showModelBadge":
+			await updateGlobalState("showModelBadge", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		// kilocode_change end
 		case "hideCostBelowThreshold":
 			await updateGlobalState("hideCostBelowThreshold", message.value)

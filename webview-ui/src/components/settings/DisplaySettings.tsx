@@ -17,6 +17,7 @@ type DisplaySettingsProps = HTMLAttributes<HTMLDivElement> & {
 	sendMessageOnEnter?: boolean // kilocode_change
 	showTimestamps?: boolean
 	showDiffStats?: boolean // kilocode_change
+	showModelBadge?: boolean // kilocode_change
 	reasoningBlockCollapsed: boolean
 	setCachedStateField: SetCachedStateField<
 		| "showTaskTimeline"
@@ -26,6 +27,7 @@ type DisplaySettingsProps = HTMLAttributes<HTMLDivElement> & {
 		| "hideCostBelowThreshold"
 		| "showTimestamps"
 		| "showDiffStats"
+		| "showModelBadge"
 	>
 	hideCostBelowThreshold?: number
 }
@@ -34,6 +36,7 @@ export const DisplaySettings = ({
 	showTaskTimeline,
 	showTimestamps,
 	showDiffStats,
+	showModelBadge,
 	sendMessageOnEnter,
 	setCachedStateField,
 	reasoningBlockCollapsed,
@@ -118,6 +121,19 @@ export const DisplaySettings = ({
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
 						{t("settings:display.showDiffStats.description")}
+					</div>
+				</div>
+				{/* Show Model Badge checkbox */}
+				<div className="mt-3">
+					<VSCodeCheckbox
+						checked={showModelBadge}
+						onChange={(e: any) => {
+							setCachedStateField("showModelBadge", e.target.checked)
+						}}>
+						<span className="font-medium">{t("settings:display.showModelBadge.label")}</span>
+					</VSCodeCheckbox>
+					<div className="text-vscode-descriptionForeground text-sm mt-1">
+						{t("settings:display.showModelBadge.description")}
 					</div>
 				</div>
 				{/* Send Message on Enter Setting */}

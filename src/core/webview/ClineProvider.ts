@@ -2271,6 +2271,7 @@ export class ClineProvider
 			showTaskTimeline, // kilocode_change
 			sendMessageOnEnter, // kilocode_change
 			showTimestamps, // kilocode_change
+			showModelBadge, // kilocode_change
 			hideCostBelowThreshold, // kilocode_change
 			maxReadFileLine,
 			maxImageFileSize,
@@ -2461,6 +2462,7 @@ export class ClineProvider
 			showTaskTimeline: showTaskTimeline ?? true, // kilocode_change
 			sendMessageOnEnter: sendMessageOnEnter ?? true, // kilocode_change
 			showTimestamps: showTimestamps ?? true, // kilocode_change
+			showModelBadge: showModelBadge ?? true, // kilocode_change
 			hideCostBelowThreshold, // kilocode_change
 			language, // kilocode_change
 			enableSubfolderRules: enableSubfolderRules ?? false,
@@ -2785,6 +2787,7 @@ export class ClineProvider
 			showTaskTimeline: stateValues.showTaskTimeline ?? true, // kilocode_change
 			sendMessageOnEnter: stateValues.sendMessageOnEnter ?? true, // kilocode_change
 			showTimestamps: stateValues.showTimestamps ?? true, // kilocode_change
+			showModelBadge: stateValues.showModelBadge ?? true, // kilocode_change
 			hideCostBelowThreshold: stateValues.hideCostBelowThreshold ?? 0, // kilocode_change
 			enableSubfolderRules: stateValues.enableSubfolderRules ?? false,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500 /*kilocode_change*/,

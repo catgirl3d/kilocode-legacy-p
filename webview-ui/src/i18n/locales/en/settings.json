@@ -774,6 +774,10 @@
 		"showDiffStats": {
 			"label": "Show diff stats",
 			"description": "Display lines added/removed statistics in the task header"
+		},
+		"showModelBadge": {
+			"label": "Show model badge",
+			"description": "Display the model name as a badge on chat messages"
 		}
 	},
 	"autocomplete": {

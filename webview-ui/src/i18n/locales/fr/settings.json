@@ -1182,6 +1182,10 @@
 		"showDiffStats": {
 			"label": "Afficher les statistiques de diff",
 			"description": "Afficher les statistiques de lignes ajoutées/supprimées dans l'en-tête de la tâche"
+		},
+		"showModelBadge": {
+			"label": "Afficher le badge du modèle",
+			"description": "Afficher le nom du modèle sous forme de badge sur les messages de chat"
 		}
 	},
 	"autocomplete": {

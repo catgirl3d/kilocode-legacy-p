@@ -1193,6 +1193,10 @@
 		"showDiffStats": {
 			"label": "顯示差異統計",
 			"description": "在任務標題中顯示新增/刪除的行數統計"
+		},
+		"showModelBadge": {
+			"label": "顯示模型徽章",
+			"description": "在聊天訊息上將模型名稱顯示為徽章"
 		}
 	},
 	"autocomplete": {

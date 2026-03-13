@@ -285,7 +285,7 @@ export const ChatRowContent = ({
 		}, [message.text, message.say])
 
 	// kilocode_change start: hide cost display check
-	const { hideCostBelowThreshold } = useExtensionState()
+	const { hideCostBelowThreshold, showModelBadge } = useExtensionState()
 	const shouldShowCost = useMemo(() => {
 		if (cost === undefined || cost === null || cost <= 0) return false
 		if (isExpanded) return true
@@ -1210,7 +1210,7 @@ export const ChatRowContent = ({
 									{/* kilocode_change start */}
 									<div style={{ display: "flex", alignItems: "center", gap: "8px", flexGrow: 1 }}>
 										{title}
-										{apiReqModelId && (
+										{apiReqModelId && showModelBadge !== false && (
 											<VSCodeBadge className="text-xs" title={`Model: ${apiReqModelId}`}>
 												{prettyModelName(apiReqModelId)}
 											</VSCodeBadge>

@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "Pokaż statystyki diff",
 			"description": "Wyświetl statystyki dodanych/usuniętych linii w nagłówku zadania"
+		},
+		"showModelBadge": {
+			"label": "Pokaż plakietkę modelu",
+			"description": "Wyświetlaj nazwę modelu jako plakietkę przy wiadomościach czatu"
 		}
 	},
 	"autocomplete": {

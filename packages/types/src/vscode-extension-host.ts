@@ -250,6 +250,7 @@ export interface ExtensionMessage {
 		// kilocode_change end
 		| "showTimestamps" // kilocode_change
 		| "showDiffStats" // kilocode_change
+		| "showModelBadge" // kilocode_change
 		| "apiMessagesSaved" // kilocode_change: File save event for API messages
 		| "taskMessagesSaved" // kilocode_change: File save event for task messages
 		| "taskMetadataSaved" // kilocode_change: File save event for task metadata
@@ -665,6 +666,7 @@ export type ExtensionState = Pick<
 	virtualQuotaActiveModel?: { id: string; info: ModelInfo; activeProfileNumber?: number } // kilocode_change: Add virtual quota active model for UI display with profile number
 	showTimestamps?: boolean // kilocode_change: Show timestamps in chat messages
 	showDiffStats?: boolean // kilocode_change: Show diff stats in task header
+	showModelBadge?: boolean // kilocode_change: Show model badge in chat messages
 	claudeCodeIsAuthenticated?: boolean
 	openAiCodexIsAuthenticated?: boolean
 	debug?: boolean
@@ -881,6 +883,7 @@ export interface WebviewMessage {
 		| "sendMessageOnEnter" // kilocode_change
 		| "showTimestamps" // kilocode_change
 		| "showDiffStats" // kilocode_change
+		| "showModelBadge" // kilocode_change
 		| "hideCostBelowThreshold" // kilocode_change
 		| "toggleTaskFavorite" // kilocode_change
 		| "fixMermaidSyntax" // kilocode_change

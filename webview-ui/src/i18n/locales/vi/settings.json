@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "Hiển thị thống kê diff",
 			"description": "Hiển thị thống kê số dòng thêm/xóa trong tiêu đề tác vụ"
+		},
+		"showModelBadge": {
+			"label": "Hiển thị huy hiệu mô hình",
+			"description": "Hiển thị tên mô hình dưới dạng huy hiệu trên các tin nhắn trò chuyện"
 		}
 	},
 	"autocomplete": {

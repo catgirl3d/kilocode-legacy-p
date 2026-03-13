@@ -1188,6 +1188,10 @@
 		"showDiffStats": {
 			"label": "差分統計を表示",
 			"description": "タスクヘッダーに追加/削除された行の統計を表示"
+		},
+		"showModelBadge": {
+			"label": "モデルバッジを表示",
+			"description": "チャットメッセージにモデル名をバッジとして表示します"
 		}
 	},
 	"autocomplete": {

@@ -1188,6 +1188,10 @@
 		"showDiffStats": {
 			"label": "Mostra statistiche diff",
 			"description": "Visualizza le statistiche delle righe aggiunte/rimosse nell'intestazione dell'attività"
+		},
+		"showModelBadge": {
+			"label": "Mostra badge del modello",
+			"description": "Visualizza il nome del modello come badge sui messaggi della chat"
 		}
 	},
 	"autocomplete": {
