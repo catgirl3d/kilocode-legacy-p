@@ -39,7 +39,7 @@ export const KiloProfileSelector = ({
 	}
 
 	return (
-		<div className={cn("flex-1", "min-w-0", "overflow-hidden")}>
+		<div className={cn("shrink-0", "min-w-0", "overflow-hidden")}>
 			<SelectDropdown
 				value={currentConfigId}
 				disabled={selectApiConfigDisabled}
@@ -107,7 +107,7 @@ export const KiloProfileSelector = ({
 				contentClassName="max-h-[400px] overflow-y-auto"
 				// kilocode_change start - VSC Theme
 				triggerClassName={cn(
-					"w-full text-ellipsis overflow-hidden",
+					"text-ellipsis overflow-hidden",
 					"bg-[var(--background)] border-[var(--vscode-input-border)] hover:bg-[var(--color-vscode-list-hoverBackground)]",
 				)}
 				// kilocode_change end

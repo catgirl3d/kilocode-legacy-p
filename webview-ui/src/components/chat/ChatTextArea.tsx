@@ -6,7 +6,6 @@ import { mentionRegex, mentionRegexGlobal, unescapeSpaces } from "@roo/context-m
 import { WebviewMessage } from "@roo/WebviewMessage"
 import { Mode, getAllModes } from "@roo/modes"
 import { ExtensionMessage } from "@roo/ExtensionMessage"
-import type { ProfileType } from "@roo-code/types" // kilocode_change - autocomplete profile type system
 
 import { vscode } from "@/utils/vscode"
 import { useExtensionState } from "@/context/ExtensionStateContext"
@@ -22,16 +21,14 @@ import {
 import { convertToMentionPath } from "@/utils/path-mentions"
 import { escapeHtml } from "@/utils/highlight" // kilocode_change - FIM autocomplete
 import { useChatAutocompleteText } from "./hooks/useChatAutocompleteText" // kilocode_change: FIM autocomplete
-import { DropdownOptionType, Button, StandardTooltip } from "@/components/ui"
+import { Button, StandardTooltip } from "@/components/ui"
 
 import Thumbnails from "../common/Thumbnails"
 import { ModeSelector } from "./ModeSelector"
-import KiloModeSelector from "../kilocode/KiloModeSelector"
-import { KiloProfileSelector } from "../kilocode/chat/KiloProfileSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { ImageWarningBanner } from "./ImageWarningBanner"
-import { VolumeX, Pin, Check, WandSparkles, SendHorizontal, Paperclip, MessageSquareX } from "lucide-react"
+import { VolumeX, WandSparkles, SendHorizontal, Paperclip, MessageSquareX } from "lucide-react"
 import { IndexingStatusBadge } from "./IndexingStatusBadge"
 import { MicrophoneButton } from "./MicrophoneButton" // kilocode_change: STT microphone button
 import { VolumeVisualizer } from "./VolumeVisualizer" // kilocode_change: STT volume level visual
@@ -57,7 +54,6 @@ interface ChatTextAreaProps {
 	inputValue: string
 	setInputValue: (value: string) => void
 	sendingDisabled: boolean
-	selectApiConfigDisabled: boolean
 	placeholderText: string
 	selectedImages: string[]
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
@@ -129,7 +125,6 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			inputValue,
 			setInputValue,
 			sendingDisabled,
-			selectApiConfigDisabled,
 			placeholderText,
 			selectedImages,
 			setSelectedImages,
@@ -150,13 +145,9 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const {
 			filePaths,
 			openedTabs,
-			currentApiConfigName,
-			listApiConfigMeta: listApiConfigMeta_unfilteredByKiloCodeProfileType,
 			customModes,
 			customModePrompts,
 			cwd,
-			pinnedApiConfigs,
-			togglePinnedApiConfig,
 			localWorkflows, // kilocode_change
 			globalWorkflows, // kilocode_change
 			taskHistoryVersion, // kilocode_change
@@ -174,27 +165,6 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			handleStatusChange,
 		} = useSTTStatus()
 		// kilocode_change end: Manage STT status and error state with auto-clearing
-		// kilocode_change start - autocomplete profile type system
-		// Filter out autocomplete profiles - only show chat profiles in the chat interface
-		const listApiConfigMeta = useMemo(() => {
-			if (!listApiConfigMeta_unfilteredByKiloCodeProfileType) {
-				return []
-			}
-			return listApiConfigMeta_unfilteredByKiloCodeProfileType.filter((config) => {
-				const profileType = (config as { profileType?: ProfileType }).profileType
-				return profileType !== "autocomplete"
-			})
-		}, [listApiConfigMeta_unfilteredByKiloCodeProfileType])
-		// kilocode_change end
-		// Find the ID and display text for the currently selected API configuration
-		const { currentConfigId, displayName } = useMemo(() => {
-			const currentConfig = listApiConfigMeta?.find((config) => config.name === currentApiConfigName)
-			return {
-				currentConfigId: currentConfig?.id || "",
-				displayName: currentApiConfigName || "", // Use the name directly for display
-			}
-		}, [listApiConfigMeta, currentApiConfigName])
-
 		const [gitCommits, setGitCommits] = useState<any[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
@@ -1425,125 +1395,6 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			/>
 		)
 
-		// Helper function to get API config dropdown options
-		// kilocode_change: unused
-		const _getApiConfigOptions = useMemo(() => {
-			const pinnedConfigs = (listApiConfigMeta || [])
-				.filter((config) => pinnedApiConfigs && pinnedApiConfigs[config.id])
-				.map((config) => ({
-					value: config.id,
-					label: config.name,
-					name: config.name,
-					type: DropdownOptionType.ITEM,
-					pinned: true,
-				}))
-				.sort((a, b) => a.label.localeCompare(b.label))
-
-			const unpinnedConfigs = (listApiConfigMeta || [])
-				.filter((config) => !pinnedApiConfigs || !pinnedApiConfigs[config.id])
-				.map((config) => ({
-					value: config.id,
-					label: config.name,
-					name: config.name,
-					type: DropdownOptionType.ITEM,
-					pinned: false,
-				}))
-				.sort((a, b) => a.label.localeCompare(b.label))
-
-			const hasPinnedAndUnpinned = pinnedConfigs.length > 0 && unpinnedConfigs.length > 0
-
-			return [
-				...pinnedConfigs,
-				...(hasPinnedAndUnpinned
-					? [
-							{
-								value: "sep-pinned",
-								label: t("chat:separator"),
-								type: DropdownOptionType.SEPARATOR,
-							},
-						]
-					: []),
-				...unpinnedConfigs,
-				{
-					value: "sep-2",
-					label: t("chat:separator"),
-					type: DropdownOptionType.SEPARATOR,
-				},
-				{
-					value: "settingsButtonClicked",
-					label: t("chat:edit"),
-					type: DropdownOptionType.ACTION,
-				},
-			]
-		}, [listApiConfigMeta, pinnedApiConfigs, t])
-
-		// Helper function to handle API config change
-		// kilocode_change: unused
-		const _handleApiConfigChange = useCallback((value: string) => {
-			if (value === "settingsButtonClicked") {
-				vscode.postMessage({
-					type: "loadApiConfiguration",
-					text: value,
-					values: { section: "providers" },
-				})
-			} else {
-				vscode.postMessage({ type: "loadApiConfigurationById", text: value })
-			}
-		}, [])
-
-		// Helper function to render API config item
-		// kilocode_change: unused
-		const _renderApiConfigItem = useCallback(
-			({ type, value, label, pinned }: any) => {
-				if (type !== DropdownOptionType.ITEM) {
-					return label
-				}
-
-				const config = listApiConfigMeta?.find((c) => c.id === value)
-				const isCurrentConfig = config?.name === currentApiConfigName
-
-				return (
-					<div className="flex justify-between gap-2 w-full h-5">
-						<div
-							className={cn("truncate min-w-0 overflow-hidden", {
-								"font-medium": isCurrentConfig,
-							})}>
-							{label}
-						</div>
-						<div className="flex justify-end w-10 flex-shrink-0">
-							<div
-								className={cn("size-5 p-1", {
-									"block group-hover:hidden": !pinned,
-									hidden: !isCurrentConfig,
-								})}>
-								<Check className="size-3" />
-							</div>
-							<StandardTooltip content={pinned ? t("chat:unpin") : t("chat:pin")}>
-								<Button
-									variant="ghost"
-									size="icon"
-									onClick={(e) => {
-										e.stopPropagation()
-										togglePinnedApiConfig(value)
-										vscode.postMessage({
-											type: "toggleApiConfigPin",
-											text: value,
-										})
-									}}
-									className={cn("size-5", {
-										"hidden group-hover:flex": !pinned,
-										"bg-accent": pinned,
-									})}>
-									<Pin className="size-3 p-0.5 opacity-50" />
-								</Button>
-							</StandardTooltip>
-						</div>
-					</div>
-				)
-			},
-			[listApiConfigMeta, currentApiConfigName, t, togglePinnedApiConfig],
-		)
-
 		// Helper function to render the text area section
 		const renderTextAreaSection = () => (
 			<div
@@ -1577,7 +1428,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"pr-9",
 						"z-10",
 						"forced-color-adjust-none",
-						"pb-16", // kilocode_change
+						"pb-10", // kilocode_change: reduced from pb-16
 					)}
 					style={{
 						color: "transparent",
@@ -1666,13 +1517,13 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"z-[2]",
 						"scrollbar-none",
 						"scrollbar-hide",
-						"pb-16", // kilocode_change: Increased padding to prevent overlap with control bar
+						"pb-10", // kilocode_change: reduced from pb-16
 					)}
 					onScroll={() => updateHighlights()}
 				/>
 				{/* kilocode_change {Transparent overlay at bottom of textArea to avoid text overlap } */}
 				<div
-					className="absolute bottom-[1px] left-2 right-2 h-16 bg-gradient-to-t from-[var(--vscode-input-background)] via-[var(--vscode-input-background)] to-transparent pointer-events-none z-[2]"
+					className="absolute bottom-[1px] left-2 right-2 h-10 bg-gradient-to-t from-[var(--vscode-input-background)] via-[var(--vscode-input-background)] to-transparent pointer-events-none z-[2]"
 					aria-hidden="true"
 				/>
 
@@ -1845,6 +1696,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		return (
 			<div
+				ref={containerRef}
 				className={cn(
 					"relative",
 					"flex",
@@ -1940,90 +1792,6 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						)}
 
 						{renderTextAreaSection()}
-
-						<div
-							// kilocode_change start
-							style={{
-								marginTop: "-38px",
-								zIndex: 10,
-								paddingLeft: "8px",
-								paddingRight: "8px",
-								paddingBottom: isEditMode ? "10px" : "0",
-							}}
-							ref={containerRef}
-							// kilocode_change end
-							className={cn("flex", "justify-between", "items-center", "mt-auto")}>
-							<div className={cn("flex", "items-center", "gap-1", "min-w-0")}>
-								<div className="shrink-0">
-									{/* kilocode_change start: KiloModeSelector instead of ModeSelector */}
-									<KiloModeSelector
-										value={mode}
-										onChange={setMode}
-										modeShortcutText={modeShortcutText}
-										customModes={customModes}
-									/>
-									{/* kilocode_change end */}
-								</div>
-
-								<KiloProfileSelector
-									currentConfigId={currentConfigId}
-									currentApiConfigName={currentApiConfigName}
-									displayName={displayName}
-									listApiConfigMeta={listApiConfigMeta}
-									pinnedApiConfigs={pinnedApiConfigs}
-									togglePinnedApiConfig={togglePinnedApiConfig}
-									selectApiConfigDisabled={selectApiConfigDisabled}
-								/>
-							</div>
-
-							{/* kilocode_change: hidden on small containerWidth
-								<div className={cn("flex", "items-center", "gap-0.5", "shrink-0")}>
-									{isTtsPlaying && (
-										<StandardTooltip content={t("chat:stopTts")}>
-											<button
-												aria-label={t("chat:stopTts")}
-												onClick={() => vscode.postMessage({ type: "stopTts" })}
-												className={cn(
-													"relative inline-flex items-center justify-center",
-													"bg-transparent border-none p-1.5",
-													"rounded-md min-w-[28px] min-h-[28px]",
-													"text-vscode-foreground opacity-85",
-													"transition-all duration-150",
-													"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
-													"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
-													"active:bg-[rgba(255,255,255,0.1)]",
-													"cursor-pointer",
-												)}>
-												<VolumeX className="w-4 h-4" />
-											</button>
-										</StandardTooltip>
-									)}
-									<IndexingStatusBadge />
-									<StandardTooltip content={t("chat:addImages")}>
-										<button
-											aria-label={t("chat:addImages")}
-											disabled={shouldDisableImages}
-											onClick={!shouldDisableImages ? onSelectImages : undefined}
-											className={cn(
-												"relative inline-flex items-center justify-center",
-												"bg-transparent border-none p-1.5",
-												"rounded-md min-w-[28px] min-h-[28px]",
-												"text-vscode-foreground opacity-85",
-												"transition-all duration-150",
-												"hover:opacity-100 hover:bg-[rgba(255,255,255,0.03)] hover:border-[rgba(255,255,255,0.15)]",
-												"focus:outline-none focus-visible:ring-1 focus-visible:ring-vscode-focusBorder",
-												"active:bg-[rgba(255,255,255,0.1)]",
-												!shouldDisableImages && "cursor-pointer",
-												shouldDisableImages &&
-													"opacity-40 cursor-not-allowed grayscale-[30%] hover:bg-transparent hover:border-[rgba(255,255,255,0.08)] active:bg-transparent",
-												"mr-1",
-											)}>
-											<Image className="w-4 h-4" />
-										</button>
-									</StandardTooltip>
-								</div>
-								*/}
-						</div>
 					</div>
 				</div>
 
