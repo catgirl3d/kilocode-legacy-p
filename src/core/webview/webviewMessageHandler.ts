@@ -113,6 +113,15 @@ import { ManagedIndexer } from "../../services/code-index/managed/ManagedIndexer
 import { SessionManager } from "../../shared/kilocode/cli-sessions/core/SessionManager" // kilocode_change
 import { getEffectiveTelemetrySetting } from "../kilocode/wrapper"
 
+async function switchToPreRelease() {
+	await vscode.commands.executeCommand("workbench.extensions.installExtension", "kilocode.kilo-code", {
+		installPreReleaseVersion: true,
+	})
+	vscode.window.showInformationMessage(
+		"Switching to the pre-release channel. VS Code will prompt you to reload once the update is installed.",
+	)
+}
+
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
 	message: MaybeTypedWebviewMessage, // kilocode_change switch to MaybeTypedWebviewMessage for better type-safety
@@ -1774,7 +1783,9 @@ export const webviewMessageHandler = async (
 			await provider.postStateToWebview()
 			break
 		case "openInBrowser":
-			if (message.url) {
+			if (message.url === "https://blog.kilo.ai/p/we-completely-rebuilt-the-kilo-vs-code-extension") {
+				await switchToPreRelease()
+			} else if (message.url) {
 				vscode.env.openExternal(vscode.Uri.parse(message.url))
 			}
 			break
