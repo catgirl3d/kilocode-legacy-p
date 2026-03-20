@@ -1,5 +1,11 @@
 # kilo-code
 
+## 5.11.0
+
+### Minor Changes
+
+- [#74](https://github.com/Kilo-Org/kilocode-legacy/pull/74) [`985f714`](https://github.com/Kilo-Org/kilocode-legacy/commit/985f714c6ed4663610a8a2fe7936fb86dbe4462a) Thanks [@chrarnoldus](https://github.com/chrarnoldus)! - Added notification about the completely rebuilt Kilo Code extension for VS Code.
+
 ## 5.10.5
 
 ### Patch Changes
