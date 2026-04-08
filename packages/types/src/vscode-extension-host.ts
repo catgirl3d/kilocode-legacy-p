@@ -841,6 +841,7 @@ export interface WebviewMessage {
 		| "showSystemNotification" // kilocode_change
 		| "showAutoApproveMenu" // kilocode_change
 		| "reportBug" // kilocode_change
+		| "executeStagedDiff" // kilocode_change
 		| "profileButtonClicked" // kilocode_change
 		| "fetchProfileDataRequest" // kilocode_change
 		| "profileDataResponse" // kilocode_change

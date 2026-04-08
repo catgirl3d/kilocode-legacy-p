@@ -773,9 +773,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	const handleInsertStagedDiff = useCallback(() => {
-		// kilocode_change: append the staged diff mention to the existing draft instead of replacing it
-		handleSetChatBoxMessage("@/staged_diff_output.txt", [])
-	}, [handleSetChatBoxMessage])
+		// kilocode_change: backend first generates staged_diff_output.txt, then inserts the mention into chat
+		vscode.postMessage({ type: "executeStagedDiff" })
+	}, [])
 
 	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
 

@@ -59,6 +59,7 @@ const mockClineProvider = {
 	getCurrentTask: vi.fn(),
 	getTaskWithId: vi.fn(),
 	createTaskWithHistoryItem: vi.fn(),
+	cwd: "/mock/workspace",
 } as unknown as ClineProvider
 
 import { t } from "../../../i18n"
@@ -121,10 +122,19 @@ vi.mock("fs/promises", () => {
 	}
 })
 
+vi.mock("child_process", async () => {
+	const actual = await vi.importActual<typeof import("child_process")>("child_process")
+	return {
+		...actual,
+		spawn: mockSpawn,
+	}
+})
+
 import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import * as os from "os"
 import * as path from "path"
+import { EventEmitter } from "events"
 import * as fsUtils from "../../../utils/fs"
 import { getWorkspacePath } from "../../../utils/path"
 import { ensureSettingsDirectoryExists } from "../../../utils/globalContext"
@@ -134,6 +144,10 @@ import type { ModeConfig } from "@roo-code/types"
 vi.mock("../../../utils/fs")
 vi.mock("../../../utils/path")
 vi.mock("../../../utils/globalContext")
+
+const { mockSpawn } = vi.hoisted(() => ({
+	mockSpawn: vi.fn(),
+}))
 
 vi.mock("../../mentions/resolveImageMentions", () => ({
 	resolveImageMentions: vi.fn(async ({ text, images }: { text: string; images?: string[] }) => ({
@@ -1113,5 +1127,80 @@ describe("webviewMessageHandler - downloadErrorDiagnostics", () => {
 
 		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("No active task to generate diagnostics for")
 		expect(generateErrorDiagnostics).not.toHaveBeenCalled()
+	})
+})
+
+describe("webviewMessageHandler - executeStagedDiff", () => {
+	const createSpawnProcess = ({
+		stdout = "",
+		stderr = "",
+		exitCode = 0,
+	}: {
+		stdout?: string
+		stderr?: string
+		exitCode?: number
+	}) => {
+		const process = new EventEmitter() as EventEmitter & {
+			stdout: EventEmitter
+			stderr: EventEmitter
+		}
+
+		process.stdout = new EventEmitter()
+		process.stderr = new EventEmitter()
+
+		queueMicrotask(() => {
+			if (stdout) {
+				process.stdout.emit("data", Buffer.from(stdout))
+			}
+			if (stderr) {
+				process.stderr.emit("data", Buffer.from(stderr))
+			}
+			process.emit("close", exitCode)
+		})
+
+		return process
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+		vi.mocked(mockClineProvider.getCurrentTask).mockReturnValue(null)
+	})
+
+	it("writes staged diff output and inserts the mention into chat", async () => {
+		mockSpawn.mockReturnValue(createSpawnProcess({ stdout: "diff --git a/file.txt b/file.txt\n+new line\n" }))
+
+		await webviewMessageHandler(mockClineProvider, { type: "executeStagedDiff" } as any)
+
+		expect(mockSpawn).toHaveBeenCalledWith("git", ["diff", "--staged"], {
+			cwd: "/mock/workspace",
+			windowsHide: true,
+		})
+		expect(fs.writeFile).toHaveBeenCalledWith(
+			path.join("/mock/workspace", "staged_diff_output.txt"),
+			"diff --git a/file.txt b/file.txt\n+new line\n",
+			"utf8",
+		)
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "invoke",
+			invoke: "setChatBoxMessage",
+			text: "@/staged_diff_output.txt",
+			images: [],
+		})
+		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			type: "action",
+			action: "focusInput",
+		})
+	})
+
+	it("shows info and does not insert mention when there are no staged changes", async () => {
+		mockSpawn.mockReturnValue(createSpawnProcess({ stdout: "" }))
+
+		await webviewMessageHandler(mockClineProvider, { type: "executeStagedDiff" } as any)
+
+		expect(vscode.window.showInformationMessage).toHaveBeenCalledWith("No staged changes found")
+		expect(fs.writeFile).not.toHaveBeenCalled()
+		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalledWith(
+			expect.objectContaining({ invoke: "setChatBoxMessage" }),
+		)
 	})
 })
