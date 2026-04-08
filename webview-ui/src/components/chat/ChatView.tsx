@@ -772,6 +772,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[inputValue, selectedImages],
 	)
 
+	const handleInsertStagedDiff = useCallback(() => {
+		// kilocode_change: append the staged diff mention to the existing draft instead of replacing it
+		handleSetChatBoxMessage("@/staged_diff_output.txt", [])
+	}, [handleSetChatBoxMessage])
+
 	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
 
 	// This logic depends on the useEffect[messages] above to set clineAsk,
@@ -1939,6 +1944,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				showApiConfig
 				modeShortcutText={modeShortcutText}
 				selectApiConfigDisabled={sendingDisabled && clineAsk !== "api_req_failed"}
+				onInsertStagedDiff={handleInsertStagedDiff}
 			/>
 			{/* kilocode_change: end */}
 

@@ -9,12 +9,14 @@ interface BottomControlsProps {
 	showApiConfig?: boolean
 	modeShortcutText?: string
 	selectApiConfigDisabled?: boolean
+	onInsertStagedDiff?: () => void // kilocode_change
 }
 
 const BottomControls: React.FC<BottomControlsProps> = ({
 	showApiConfig = false,
 	modeShortcutText = "",
 	selectApiConfigDisabled = false,
+	onInsertStagedDiff,
 }) => {
 	const { t } = useAppTranslation()
 
@@ -34,6 +36,15 @@ const BottomControls: React.FC<BottomControlsProps> = ({
 			</div>
 			<div className="flex flex-row justify-end w-auto">
 				<div className="flex items-center gap-1">
+					{/* kilocode_change start: staged diff shortcut button */}
+					{onInsertStagedDiff && (
+						<BottomButton
+							iconClass="codicon-diff"
+							title="Insert staged diff"
+							onClick={onInsertStagedDiff}
+						/>
+					)}
+					{/* kilocode_change end: staged diff shortcut button */}
 					<KiloRulesToggleModal />
 					<BottomButton
 						iconClass="codicon-feedback"
