@@ -772,6 +772,11 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[inputValue, selectedImages],
 	)
 
+	const handleInsertStagedDiff = useCallback(() => {
+		// kilocode_change: backend first generates staged_diff_output.txt, then inserts the mention into chat
+		vscode.postMessage({ type: "executeStagedDiff" })
+	}, [])
+
 	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
 
 	// This logic depends on the useEffect[messages] above to set clineAsk,
@@ -1917,7 +1922,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				inputValue={inputValue}
 				setInputValue={setInputValue}
 				sendingDisabled={sendingDisabled || isProfileDisabled}
-				selectApiConfigDisabled={sendingDisabled && clineAsk !== "api_req_failed"}
 				placeholderText={placeholderText}
 				selectedImages={selectedImages}
 				setSelectedImages={setSelectedImages}
@@ -1936,7 +1940,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				showBrowserDockToggle={showBrowserDockToggle}
 			/>
 			{/* kilocode_change: added settings toggle the profile and model selection */}
-			<BottomControls showApiConfig />
+			<BottomControls
+				showApiConfig
+				modeShortcutText={modeShortcutText}
+				selectApiConfigDisabled={sendingDisabled && clineAsk !== "api_req_failed"}
+				onInsertStagedDiff={handleInsertStagedDiff}
+			/>
 			{/* kilocode_change: end */}
 
 			{/* kilocode_change: disable {isProfileDisabled && (

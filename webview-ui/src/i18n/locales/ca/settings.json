@@ -1182,6 +1182,10 @@
 		"showDiffStats": {
 			"label": "Mostra estadístiques de diff",
 			"description": "Mostra les estadístiques de línies afegides/eliminades a la capçalera de la tasca"
+		},
+		"showModelBadge": {
+			"label": "Mostra la insígnia del model",
+			"description": "Mostra el nom del model com una insígnia als missatges del xat"
 		}
 	},
 	"autocomplete": {

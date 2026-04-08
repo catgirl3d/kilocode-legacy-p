@@ -120,7 +120,7 @@ export const KiloModeSelector = ({
 			onChange={handleChange}
 			shortcutText={modeShortcutText}
 			triggerClassName={cn(
-				"w-full bg-[var(--background)] border-[var(--vscode-input-border)] hover:bg-[var(--color-vscode-list-hoverBackground)]",
+				"bg-[var(--background)] border-[var(--vscode-input-border)] hover:bg-[var(--color-vscode-list-hoverBackground)]",
 				triggerClassName,
 			)}
 		/>

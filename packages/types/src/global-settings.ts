@@ -137,6 +137,7 @@ export const globalSettingsSchema = z.object({
 	sendMessageOnEnter: z.boolean().optional(), // kilocode_change: Enter key behavior
 	showTimestamps: z.boolean().optional(), // kilocode_change
 	showDiffStats: z.boolean().optional(), // kilocode_change
+	showModelBadge: z.boolean().optional(), // kilocode_change
 	hideCostBelowThreshold: z.number().min(0).optional(), // kilocode_change
 	localWorkflowToggles: z.record(z.string(), z.boolean()).optional(), // kilocode_change
 	globalWorkflowToggles: z.record(z.string(), z.boolean()).optional(), // kilocode_change

@@ -39,8 +39,8 @@ const TaskItemFooter: React.FC<TaskItemFooterProps> = ({ item, variant, isSelect
 					<CopyButton itemTask={item.task} />
 					<FavoriteButton isFavorited={item.isFavorited ?? false} id={item.id} />
 					<KiloShareSessionButton id={item.id} />
-					{variant === "full" && <ExportButton itemId={item.id} />}
 					{onDelete && <DeleteButton itemId={item.id} onDelete={onDelete} />}
+					{variant === "full" && <ExportButton itemId={item.id} />}
 				</div>
 			)}
 		</div>

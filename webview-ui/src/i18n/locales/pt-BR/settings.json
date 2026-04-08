@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "Mostrar estatísticas de diff",
 			"description": "Exibir estatísticas de linhas adicionadas/removidas no cabeçalho da tarefa"
+		},
+		"showModelBadge": {
+			"label": "Mostrar emblema do modelo",
+			"description": "Exibir o nome do modelo como um emblema nas mensagens do chat"
 		}
 	},
 	"autocomplete": {

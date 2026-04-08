@@ -1178,6 +1178,10 @@
 		"showDiffStats": {
 			"label": "Diff-Statistiken anzeigen",
 			"description": "Statistiken zu hinzugefügten/entfernten Zeilen im Aufgaben-Header anzeigen"
+		},
+		"showModelBadge": {
+			"label": "Modell-Badge anzeigen",
+			"description": "Zeigt den Modellnamen als Badge in Chat-Nachrichten an"
 		}
 	},
 	"autocomplete": {

@@ -2,6 +2,7 @@ import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as os from "os"
 import * as fs from "fs/promises"
+import { spawn } from "child_process"
 import { getRooDirectoriesForCwd } from "../../services/roo-config/index.js"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
@@ -113,6 +114,15 @@ import { ManagedIndexer } from "../../services/code-index/managed/ManagedIndexer
 import { SessionManager } from "../../shared/kilocode/cli-sessions/core/SessionManager" // kilocode_change
 import { getEffectiveTelemetrySetting } from "../kilocode/wrapper"
 
+async function switchToPreRelease() {
+	await vscode.commands.executeCommand("workbench.extensions.installExtension", "kilocode.kilo-code", {
+		installPreReleaseVersion: true,
+	})
+	vscode.window.showInformationMessage(
+		"Switching to the pre-release channel. VS Code will prompt you to reload once the update is installed.",
+	)
+}
+
 export const webviewMessageHandler = async (
 	provider: ClineProvider,
 	message: MaybeTypedWebviewMessage, // kilocode_change switch to MaybeTypedWebviewMessage for better type-safety
@@ -125,6 +135,39 @@ export const webviewMessageHandler = async (
 
 	const getCurrentCwd = () => {
 		return provider.getCurrentTask()?.cwd || provider.cwd
+	}
+
+	const runGitStagedDiff = async (cwd: string): Promise<{ stdout: string; stderr: string }> => {
+		return await new Promise((resolve, reject) => {
+			const gitProcess = spawn("git", ["diff", "--staged"], {
+				cwd,
+				windowsHide: true,
+			})
+
+			let stdout = ""
+			let stderr = ""
+
+			gitProcess.stdout.on("data", (chunk) => {
+				stdout += chunk.toString()
+			})
+
+			gitProcess.stderr.on("data", (chunk) => {
+				stderr += chunk.toString()
+			})
+
+			gitProcess.on("error", (error) => {
+				reject(error)
+			})
+
+			gitProcess.on("close", (code) => {
+				if (code === 0) {
+					resolve({ stdout, stderr })
+					return
+				}
+
+				reject(new Error(stderr.trim() || `git diff --staged exited with code ${code}`))
+			})
+		})
 	}
 
 	/**
@@ -1773,6 +1816,9 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("systemNotificationsEnabled", systemNotificationsEnabled)
 			await provider.postStateToWebview()
 			break
+		case "switchToPreRelease":
+			await switchToPreRelease()
+			break
 		case "openInBrowser":
 			if (message.url) {
 				vscode.env.openExternal(vscode.Uri.parse(message.url))
@@ -2033,6 +2079,10 @@ export const webviewMessageHandler = async (
 			await updateGlobalState("showDiffStats", message.bool ?? true)
 			await provider.postStateToWebview()
 			break
+		case "showModelBadge":
+			await updateGlobalState("showModelBadge", message.bool ?? true)
+			await provider.postStateToWebview()
+			break
 		// kilocode_change end
 		case "hideCostBelowThreshold":
 			await updateGlobalState("hideCostBelowThreshold", message.value)
@@ -2238,6 +2288,39 @@ export const webviewMessageHandler = async (
 				await vscode.env.openExternal(vscode.Uri.parse("https://discord.gg/fxrhCFGhkP"))
 			} else if (answer === customerSupport) {
 				await vscode.env.openExternal(vscode.Uri.parse(getAppUrl("/support")))
+			}
+			break
+		}
+		case "executeStagedDiff": {
+			const cwd = getCurrentCwd()
+
+			if (!cwd) {
+				vscode.window.showErrorMessage("No workspace folder is available for staged diff generation")
+				break
+			}
+
+			try {
+				const { stdout } = await runGitStagedDiff(cwd)
+
+				if (stdout.trim().length === 0) {
+					vscode.window.showInformationMessage("No staged changes found")
+					break
+				}
+
+				const stagedDiffOutputPath = path.join(cwd, "staged_diff_output.txt")
+				await fs.writeFile(stagedDiffOutputPath, stdout, "utf8")
+
+				await provider.postMessageToWebview({
+					type: "invoke",
+					invoke: "setChatBoxMessage",
+					text: "@/staged_diff_output.txt",
+					images: [],
+				})
+				await provider.postMessageToWebview({ type: "action", action: "focusInput" })
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				provider.log(`Failed to generate staged diff output: ${errorMessage}`)
+				vscode.window.showErrorMessage(`Failed to generate staged diff: ${errorMessage}`)
 			}
 			break
 		}

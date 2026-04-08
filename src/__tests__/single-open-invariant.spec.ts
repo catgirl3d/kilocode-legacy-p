@@ -5,6 +5,18 @@ import { ClineProvider } from "../core/webview/ClineProvider"
 import { API } from "../extension/api"
 import * as ProfileValidatorMod from "../shared/ProfileValidator"
 
+vi.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		get instance() {
+			return {
+				updateIdentity: vi.fn().mockResolvedValue(undefined),
+				captureTitleButtonClicked: vi.fn(),
+				captureModeSwitch: vi.fn(),
+			}
+		},
+	},
+}))
+
 // Mock Task class used by ClineProvider to avoid heavy startup
 vi.mock("../core/task/Task", () => {
 	class TaskStub {
@@ -165,5 +177,149 @@ describe("Single-open-task invariant", () => {
 		expect(taskId).toBe("ipc-1")
 		expect(removeClineFromStack).toHaveBeenCalledTimes(1)
 		expect(createTask).toHaveBeenCalled()
+	})
+
+	it("Editor mode switch keeps mode local to the provider instance", async () => {
+		const setValue = vi.fn().mockResolvedValue(undefined)
+
+		const provider = {
+			renderContext: "editor",
+			localMode: "code",
+			localCurrentApiConfigName: "default",
+			localApiConfiguration: { apiProvider: "anthropic", consecutiveMistakeLimit: 0 },
+			getCurrentTask: vi.fn(() => undefined),
+			updateGlobalState: vi.fn().mockResolvedValue(undefined),
+			emit: vi.fn(),
+			log: vi.fn(),
+			postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			providerSettingsManager: {
+				getModeConfigId: vi.fn().mockResolvedValue(undefined),
+				listConfig: vi.fn().mockResolvedValue([]),
+				setModeConfig: vi.fn(),
+			},
+			customModesManager: { getCustomModes: vi.fn().mockResolvedValue([]) },
+			contextProxy: {
+				getValue: vi.fn((key: string) => (key === "taskHistory" ? [] : undefined)),
+				setValue,
+				getValues: vi.fn().mockReturnValue({ mode: "code", currentApiConfigName: "default" }),
+				getProviderSettings: vi.fn().mockReturnValue({ apiProvider: "anthropic", consecutiveMistakeLimit: 0 }),
+				setProviderSettings: vi.fn(),
+			},
+		} as unknown as ClineProvider
+
+		await (ClineProvider.prototype as any).handleModeSwitch.call(provider, "architect")
+
+		expect((provider as any).localMode).toBe("architect")
+		expect(setValue).not.toHaveBeenCalledWith("mode", "architect")
+		expect(provider.providerSettingsManager.setModeConfig).not.toHaveBeenCalled()
+	})
+
+	it("Editor provider profile activation keeps current profile local to the provider instance", async () => {
+		const setValue = vi.fn().mockResolvedValue(undefined)
+		const setProviderSettings = vi.fn().mockResolvedValue(undefined)
+
+		const provider = {
+			renderContext: "editor",
+			localMode: "code",
+			localCurrentApiConfigName: "default",
+			localApiConfiguration: { apiProvider: "anthropic", consecutiveMistakeLimit: 0 },
+			getCurrentTask: vi.fn(() => undefined),
+			getState: vi.fn().mockResolvedValue({ mode: "code" }),
+			updateGlobalState: vi.fn().mockResolvedValue(undefined),
+			updateTaskApiHandlerIfNeeded: vi.fn(),
+			persistStickyProviderProfileToCurrentTask: vi.fn().mockResolvedValue(undefined),
+			emit: vi.fn(),
+			log: vi.fn(),
+			postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			providerSettingsManager: {
+				getProfile: vi.fn().mockResolvedValue({
+					name: "alt",
+					id: "cfg-2",
+					apiProvider: "openrouter",
+					openRouterApiKey: "token",
+				}),
+				listConfig: vi.fn().mockResolvedValue([{ name: "alt", id: "cfg-2", apiProvider: "openrouter" }]),
+				setModeConfig: vi.fn(),
+			},
+			customModesManager: { getCustomModes: vi.fn().mockResolvedValue([]) },
+			contextProxy: {
+				getValue: vi.fn(),
+				setValue,
+				getValues: vi.fn().mockReturnValue({ mode: "code", currentApiConfigName: "default" }),
+				getProviderSettings: vi.fn().mockReturnValue({ apiProvider: "anthropic", consecutiveMistakeLimit: 0 }),
+				setProviderSettings,
+			},
+		} as unknown as ClineProvider
+
+		await (ClineProvider.prototype as any).activateProviderProfile.call(provider, { name: "alt" })
+
+		expect((provider as any).localCurrentApiConfigName).toBe("alt")
+		expect((provider as any).localApiConfiguration.apiProvider).toBe("openrouter")
+		expect(setValue).not.toHaveBeenCalledWith("currentApiConfigName", "alt")
+		expect(setProviderSettings).not.toHaveBeenCalled()
+		expect(provider.providerSettingsManager.setModeConfig).not.toHaveBeenCalled()
+	})
+
+	it("Editor history restore keeps restored mode local to the provider instance", async () => {
+		const removeClineFromStack = vi.fn().mockResolvedValue(undefined)
+		const addClineToStack = vi.fn().mockResolvedValue(undefined)
+		const setValue = vi.fn().mockResolvedValue(undefined)
+
+		const provider = {
+			renderContext: "editor",
+			localMode: "code",
+			localCurrentApiConfigName: "default",
+			localApiConfiguration: { apiProvider: "anthropic", consecutiveMistakeLimit: 0 },
+			getCurrentTask: vi.fn(() => undefined),
+			removeClineFromStack,
+			addClineToStack,
+			updateGlobalState: vi.fn().mockResolvedValue(undefined),
+			log: vi.fn(),
+			customModesManager: { getCustomModes: vi.fn().mockResolvedValue([]) },
+			providerSettingsManager: {
+				getModeConfigId: vi.fn().mockResolvedValue(undefined),
+				listConfig: vi.fn().mockResolvedValue([]),
+			},
+			getState: vi.fn().mockResolvedValue({
+				apiConfiguration: { apiProvider: "anthropic", consecutiveMistakeLimit: 0 },
+				diffEnabled: false,
+				enableCheckpoints: true,
+				checkpointTimeout: 60,
+				fuzzyMatchThreshold: 1.0,
+				experiments: {},
+				cloudUserInfo: null,
+				taskSyncEnabled: false,
+			}),
+			getPendingEditOperation: vi.fn().mockReturnValue(undefined),
+			clearPendingEditOperation: vi.fn(),
+			context: { extension: { packageJSON: {} }, globalStorageUri: { fsPath: "/tmp" } },
+			contextProxy: {
+				extensionUri: {},
+				getValue: vi.fn(),
+				setValue,
+				setProviderSettings: vi.fn(),
+				getProviderSettings: vi.fn(() => ({})),
+			},
+			postStateToWebview: vi.fn(),
+		} as unknown as ClineProvider
+
+		const historyItem = {
+			id: "hist-editor",
+			number: 1,
+			ts: Date.now(),
+			task: "Task",
+			tokensIn: 0,
+			tokensOut: 0,
+			totalCost: 0,
+			workspace: "/tmp",
+			mode: "architect",
+		}
+
+		await (ClineProvider.prototype as any).createTaskWithHistoryItem.call(provider, historyItem)
+
+		expect((provider as any).localMode).toBe("architect")
+		expect(setValue).not.toHaveBeenCalledWith("mode", "architect")
+		expect(removeClineFromStack).toHaveBeenCalledTimes(1)
+		expect(addClineToStack).toHaveBeenCalledTimes(1)
 	})
 })

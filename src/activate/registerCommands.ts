@@ -310,6 +310,7 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	const contextProxy = await ContextProxy.getInstance(context)
 	const codeIndexManager = CodeIndexManager.getInstance(context)
+	const sourceProvider = ClineProvider.getVisibleInstance()
 
 	// Get the existing MDM service instance to ensure consistent policy enforcement
 	let mdmService: MdmService | undefined
@@ -321,6 +322,9 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	}
 
 	const tabProvider = new ClineProvider(context, outputChannel, "editor", contextProxy, mdmService)
+	if (sourceProvider) {
+		await tabProvider.cloneViewStateFrom(sourceProvider)
+	}
 	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 
 	// Check if there are any visible text editors, otherwise open a new group

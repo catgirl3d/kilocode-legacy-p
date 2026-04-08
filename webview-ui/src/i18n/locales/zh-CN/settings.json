@@ -1187,6 +1187,10 @@
 		"showDiffStats": {
 			"label": "显示差异统计",
 			"description": "在任务标题中显示添加/删除的行数统计"
+		},
+		"showModelBadge": {
+			"label": "显示模型徽章",
+			"description": "在聊天消息上显示模型名称徽章"
 		}
 	},
 	"autocomplete": {

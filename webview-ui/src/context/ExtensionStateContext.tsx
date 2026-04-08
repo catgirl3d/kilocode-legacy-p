@@ -44,6 +44,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setShowTimestamps: (value: boolean) => void // kilocode_change
 	showDiffStats?: boolean // kilocode_change
 	setShowDiffStats: (value: boolean) => void // kilocode_change
+	showModelBadge?: boolean // kilocode_change
+	setShowModelBadge: (value: boolean) => void // kilocode_change
 	hideCostBelowThreshold?: number // kilocode_change
 	setHideCostBelowThreshold: (value: number) => void // kilocode_change
 	hoveringTaskTimeline?: boolean // kilocode_change
@@ -322,6 +324,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		sendMessageOnEnter: true, // kilocode_change
 		showTimestamps: true, // kilocode_change
 		showDiffStats: true, // kilocode_change
+		showModelBadge: true, // kilocode_change
 		kilocodeDefaultModel: openRouterDefaultModelId,
 		reasoningBlockCollapsed: true, // Default to collapsed
 		enterBehavior: "send", // Default: Enter sends, Shift+Enter creates newline
@@ -673,6 +676,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setHoveringTaskTimeline: (value) => setState((prevState) => ({ ...prevState, hoveringTaskTimeline: value })),
 		setShowTimestamps: (value) => setState((prevState) => ({ ...prevState, showTimestamps: value })),
 		setShowDiffStats: (value) => setState((prevState) => ({ ...prevState, showDiffStats: value })), // kilocode_change
+		setShowModelBadge: (value) => setState((prevState) => ({ ...prevState, showModelBadge: value })), // kilocode_change
 		setYoloMode: (value) => setState((prevState) => ({ ...prevState, yoloMode: value })), // kilocode_change
 		// kilocode_change end
 		setAutoApprovalEnabled: (value) => setState((prevState) => ({ ...prevState, autoApprovalEnabled: value })),

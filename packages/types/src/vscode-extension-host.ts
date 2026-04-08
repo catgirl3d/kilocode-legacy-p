@@ -185,6 +185,7 @@ export interface ExtensionMessage {
 		| "mcpDownloadDetails" // kilocode_change
 		| "showSystemNotification" // kilocode_change
 		| "openInBrowser" // kilocode_change
+		| "switchToPreRelease" // kilocode_change
 		| "acceptInput"
 		| "focusChatInput" // kilocode_change
 		| "stt:started" // kilocode_change: STT session started
@@ -250,6 +251,7 @@ export interface ExtensionMessage {
 		// kilocode_change end
 		| "showTimestamps" // kilocode_change
 		| "showDiffStats" // kilocode_change
+		| "showModelBadge" // kilocode_change
 		| "apiMessagesSaved" // kilocode_change: File save event for API messages
 		| "taskMessagesSaved" // kilocode_change: File save event for task messages
 		| "taskMetadataSaved" // kilocode_change: File save event for task metadata
@@ -665,6 +667,7 @@ export type ExtensionState = Pick<
 	virtualQuotaActiveModel?: { id: string; info: ModelInfo; activeProfileNumber?: number } // kilocode_change: Add virtual quota active model for UI display with profile number
 	showTimestamps?: boolean // kilocode_change: Show timestamps in chat messages
 	showDiffStats?: boolean // kilocode_change: Show diff stats in task header
+	showModelBadge?: boolean // kilocode_change: Show model badge in chat messages
 	claudeCodeIsAuthenticated?: boolean
 	openAiCodexIsAuthenticated?: boolean
 	debug?: boolean
@@ -838,6 +841,7 @@ export interface WebviewMessage {
 		| "showSystemNotification" // kilocode_change
 		| "showAutoApproveMenu" // kilocode_change
 		| "reportBug" // kilocode_change
+		| "executeStagedDiff" // kilocode_change
 		| "profileButtonClicked" // kilocode_change
 		| "fetchProfileDataRequest" // kilocode_change
 		| "profileDataResponse" // kilocode_change
@@ -881,6 +885,7 @@ export interface WebviewMessage {
 		| "sendMessageOnEnter" // kilocode_change
 		| "showTimestamps" // kilocode_change
 		| "showDiffStats" // kilocode_change
+		| "showModelBadge" // kilocode_change
 		| "hideCostBelowThreshold" // kilocode_change
 		| "toggleTaskFavorite" // kilocode_change
 		| "fixMermaidSyntax" // kilocode_change
@@ -891,6 +896,7 @@ export interface WebviewMessage {
 		| "setReasoningBlockCollapsed" // kilocode_change
 		| "openExternal"
 		| "openInBrowser" // kilocode_change
+		| "switchToPreRelease" // kilocode_change
 		| "filterMarketplaceItems"
 		| "marketplaceButtonClicked"
 		| "installMarketplaceItem"
@@ -1398,6 +1404,7 @@ export interface ClineApiReqInfo {
 	// kilocode_change
 	usageMissing?: boolean
 	inferenceProvider?: string
+	modelId?: string
 	// kilocode_change end
 	cancelReason?: ClineApiReqCancelReason
 	streamingFailedMessage?: string

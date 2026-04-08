@@ -1204,6 +1204,10 @@
 		"showDiffStats": {
 			"label": "Tampilkan statistik diff",
 			"description": "Tampilkan statistik baris ditambahkan/dihapus di header tugas"
+		},
+		"showModelBadge": {
+			"label": "Tampilkan lencana model",
+			"description": "Tampilkan nama model sebagai lencana pada pesan obrolan"
 		}
 	},
 	"autocomplete": {

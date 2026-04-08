@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "diff 통계 표시",
 			"description": "작업 헤더에 추가/삭제된 줄 통계 표시"
+		},
+		"showModelBadge": {
+			"label": "모델 배지 표시",
+			"description": "채팅 메시지에 모델 이름을 배지로 표시합니다"
 		}
 	},
 	"autocomplete": {

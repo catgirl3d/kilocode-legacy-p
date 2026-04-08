@@ -1183,6 +1183,10 @@
 		"showDiffStats": {
 			"label": "Diff istatistiklerini göster",
 			"description": "Görev başlığında eklenen/silinen satır istatistiklerini görüntüle"
+		},
+		"showModelBadge": {
+			"label": "Model rozetini göster",
+			"description": "Sohbet mesajlarında model adını rozet olarak görüntüle"
 		}
 	},
 	"autocomplete": {

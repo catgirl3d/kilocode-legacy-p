@@ -823,6 +823,10 @@
 		"showDiffStats": {
 			"label": "แสดงสถิติ diff",
 			"description": "แสดงสถิติบรรทัดที่เพิ่ม/ลบในส่วนหัวของงาน"
+		},
+		"showModelBadge": {
+			"label": "แสดงป้ายชื่อโมเดล",
+			"description": "แสดงชื่อโมเดลเป็นป้ายชื่อ (badge) บนข้อความแชท"
 		}
 	},
 	"autocomplete": {
