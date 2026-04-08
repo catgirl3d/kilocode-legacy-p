@@ -40,6 +40,15 @@ jobs:
             - name: Install Dependencies
               run: pnpm install
 
+            # Keep the committed Changesets config pointing at upstream for easier syncs,
+            # but rewrite the repo at runtime so changelog generation resolves PR/author
+            # metadata against the repository where this workflow is actually running.
+            - name: Patch Changesets repo for current fork
+              run: |
+                  node -e "const fs=require('fs'); const path='.changeset/config.json'; const config=JSON.parse(fs.readFileSync(path,'utf8')); config.changelog=['@changesets/changelog-github',{repo: process.env.GITHUB_REPOSITORY}]; fs.writeFileSync(path, JSON.stringify(config, null, '\t') + '\n');"
+              env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+
             # Create version bump PR using changesets/action
             - name: Changeset Pull Request
               id: changesets
