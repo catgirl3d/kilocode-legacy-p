@@ -47,6 +47,11 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: pnpm changeset:version # This performs the changeset version bump
+                  # Keep github.token for changesets/action API calls (push branch + create PR).
+                  # Use CHANGESETS_GITHUB_TOKEN only inside versioning for changelog GitHub lookups.
+                  version: >-
+                      node -e "const { execFileSync } = require('child_process'); const token = process.env.CHANGESETS_GITHUB_TOKEN; if (!token) { throw new Error('CHANGESETS_GITHUB_TOKEN is not set'); } const env = { ...process.env, GITHUB_TOKEN: token }; execFileSync('node', ['scripts/patch-changeset-config.cjs'], { stdio: 'inherit', env }); try { execFileSync('pnpm', ['changeset:version'], { stdio: 'inherit', env }); } finally { execFileSync('git', ['checkout', '--', '.changeset/config.json'], { stdio: 'inherit' }); }"
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ github.token }}
+                  CHANGESETS_GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
