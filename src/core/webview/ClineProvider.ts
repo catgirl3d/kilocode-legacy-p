@@ -178,6 +178,11 @@ export class ClineProvider
 	private cloudOrganizationsCache: CloudOrganizationMembership[] | null = null
 	private cloudOrganizationsCacheTimestamp: number | null = null
 	private static readonly CLOUD_ORGANIZATIONS_CACHE_DURATION_MS = 5 * 1000 // 5 seconds
+	// kilocode_change start: editor tabs keep their own transient mode/profile selection
+	private localMode: string | undefined
+	private localCurrentApiConfigName: string | undefined
+	private localApiConfiguration: ProviderSettings | undefined
+	// kilocode_change end
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
@@ -196,6 +201,15 @@ export class ClineProvider
 		this.currentWorkspacePath = getWorkspacePath()
 
 		ClineProvider.activeInstances.add(this)
+
+		// kilocode_change start: snapshot shared state into editor-local overrides
+		if (this.renderContext === "editor") {
+			const values = this.contextProxy.getValues()
+			this.localMode = values.mode ?? defaultModeSlug
+			this.localCurrentApiConfigName = values.currentApiConfigName ?? "default"
+			this.localApiConfiguration = this.contextProxy.getProviderSettings()
+		}
+		// kilocode_change end
 
 		this.mdmService = mdmService
 		this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
@@ -952,6 +966,19 @@ export class ClineProvider
 		await this.removeClineFromStack()
 	}
 
+	// kilocode_change start: allow newly opened editor tabs to inherit the visible instance state
+	public async cloneViewStateFrom(sourceProvider: ClineProvider): Promise<void> {
+		if (this.renderContext !== "editor") {
+			return
+		}
+
+		const sourceState = await sourceProvider.getState()
+		this.localMode = sourceState.mode
+		this.localCurrentApiConfigName = sourceState.currentApiConfigName
+		this.localApiConfiguration = sourceState.apiConfiguration
+	}
+	// kilocode_change end
+
 	public async createTaskWithHistoryItem(
 		historyItem: HistoryItem & { rootTask?: Task; parentTask?: Task },
 		options?: { startTask?: boolean },
@@ -978,7 +1005,11 @@ export class ClineProvider
 				historyItem.mode = defaultModeSlug
 			}
 
-			await this.updateGlobalState("mode", historyItem.mode)
+			if (this.renderContext === "editor") {
+				this.localMode = historyItem.mode
+			} else {
+				await this.updateGlobalState("mode", historyItem.mode)
+			}
 
 			// Load the saved API config for the restored mode if it exists.
 			// Skip mode-based profile activation if historyItem.apiConfigName exists,
@@ -1448,7 +1479,11 @@ export class ClineProvider
 			}
 		}
 
-		await this.updateGlobalState("mode", newMode)
+		if (this.renderContext === "editor") {
+			this.localMode = newMode
+		} else {
+			await this.updateGlobalState("mode", newMode)
+		}
 
 		this.emit(RooCodeEventName.ModeChanged, newMode)
 
@@ -1474,14 +1509,17 @@ export class ClineProvider
 				const hasActualSettings = !!fullProfile.apiProvider
 
 				if (hasActualSettings) {
-					await this.activateProviderProfile({ name: profile.name })
+					await this.activateProviderProfile(
+						{ name: profile.name },
+						{ persistModeConfig: this.renderContext !== "editor" },
+					)
 				} else {
 					// The task will continue with the current/default configuration.
 				}
 			} else {
 				// The task will continue with the current/default configuration.
 			}
-		} else {
+		} else if (this.renderContext !== "editor") {
 			// If no saved config for this mode, save current config as default.
 			const currentApiConfigNameAfter = this.getGlobalState("currentApiConfigName")
 
@@ -1583,23 +1621,25 @@ export class ClineProvider
 
 			if (activate) {
 				const { mode } = await this.getState()
+				const listApiConfig = await this.providerSettingsManager.listConfig()
 
-				// These promises do the following:
-				// 1. Adds or updates the list of provider profiles.
-				// 2. Sets the current provider profile.
-				// 3. Sets the current mode's provider profile.
-				// 4. Copies the provider settings to the context.
-				//
-				// Note: 1, 2, and 4 can be done in one `ContextProxy` call:
-				// this.contextProxy.setValues({ ...providerSettings, listApiConfigMeta: ..., currentApiConfigName: ... })
-				// We should probably switch to that and verify that it works.
-				// I left the original implementation in just to be safe.
-				await Promise.all([
-					this.updateGlobalState("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
-					this.updateGlobalState("currentApiConfigName", name),
-					this.providerSettingsManager.setModeConfig(mode, id),
-					this.contextProxy.setProviderSettings(providerSettings),
-				])
+				if (this.renderContext === "editor") {
+					await this.updateGlobalState("listApiConfigMeta", listApiConfig)
+					this.localCurrentApiConfigName = name
+					this.localApiConfiguration = providerSettings
+				} else {
+					// These promises do the following:
+					// 1. Adds or updates the list of provider profiles.
+					// 2. Sets the current provider profile.
+					// 3. Sets the current mode's provider profile.
+					// 4. Copies the provider settings to the context.
+					await Promise.all([
+						this.updateGlobalState("listApiConfigMeta", listApiConfig),
+						this.updateGlobalState("currentApiConfigName", name),
+						this.providerSettingsManager.setModeConfig(mode, id),
+						this.contextProxy.setProviderSettings(providerSettings),
+					])
+				}
 
 				// Change the provider for the current task.
 				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
@@ -1685,21 +1725,33 @@ export class ClineProvider
 		args: { name: string } | { id: string },
 		options?: { persistModeConfig?: boolean; persistTaskHistory?: boolean },
 	) {
-		const { name, id, ...providerSettings } = await this.providerSettingsManager.activateProfile(args)
+		const profile =
+			this.renderContext === "editor"
+				? await this.providerSettingsManager.getProfile(args)
+				: await this.providerSettingsManager.activateProfile(args)
+		const { name, id, ...providerSettings } = profile
 
 		const persistModeConfig = options?.persistModeConfig ?? true
 		const persistTaskHistory = options?.persistTaskHistory ?? true
 
-		// See `upsertProviderProfile` for a description of what this is doing.
-		await Promise.all([
-			this.contextProxy.setValue("listApiConfigMeta", await this.providerSettingsManager.listConfig()),
-			this.contextProxy.setValue("currentApiConfigName", name),
-			this.contextProxy.setProviderSettings(providerSettings),
-		])
+		const listApiConfig = await this.providerSettingsManager.listConfig()
+
+		if (this.renderContext === "editor") {
+			await this.contextProxy.setValue("listApiConfigMeta", listApiConfig)
+			this.localCurrentApiConfigName = name
+			this.localApiConfiguration = providerSettings
+		} else {
+			// See `upsertProviderProfile` for a description of what this is doing.
+			await Promise.all([
+				this.contextProxy.setValue("listApiConfigMeta", listApiConfig),
+				this.contextProxy.setValue("currentApiConfigName", name),
+				this.contextProxy.setProviderSettings(providerSettings),
+			])
+		}
 
 		const { mode } = await this.getState()
 
-		if (id && persistModeConfig) {
+		if (id && persistModeConfig && this.renderContext !== "editor") {
 			await this.providerSettingsManager.setModeConfig(mode, id)
 		}
 
@@ -2076,7 +2128,7 @@ export class ClineProvider
 	async postRulesDataToWebview() {
 		const workspacePath = this.cwd
 		if (workspacePath) {
-			const mode = this.contextProxy.getGlobalState("mode") as string | undefined
+			const { mode } = await this.getState()
 			this.postMessageToWebview({
 				type: "rulesData",
 				...(await getEnabledRules(workspacePath, this.contextProxy, this.context, mode)),
@@ -2607,7 +2659,18 @@ export class ClineProvider
 		const apiProvider: ProviderName = stateValues.apiProvider ? stateValues.apiProvider : "kilocode" // kilocode_change: fall back to kilocode
 
 		// Build the apiConfiguration object combining state values and secrets.
-		const providerSettings = this.contextProxy.getProviderSettings()
+		const providerSettings =
+			this.renderContext === "editor"
+				? (this.localApiConfiguration ?? this.contextProxy.getProviderSettings())
+				: this.contextProxy.getProviderSettings()
+		const resolvedMode =
+			this.renderContext === "editor"
+				? (this.localMode ?? stateValues.mode ?? defaultModeSlug)
+				: (stateValues.mode ?? defaultModeSlug)
+		const resolvedCurrentApiConfigName =
+			this.renderContext === "editor"
+				? (this.localCurrentApiConfigName ?? stateValues.currentApiConfigName ?? "default")
+				: (stateValues.currentApiConfigName ?? "default")
 
 		// Ensure apiProvider is set properly if not already in state
 		if (!providerSettings.apiProvider) {
@@ -2749,12 +2812,12 @@ export class ClineProvider
 			terminalZshP10k: stateValues.terminalZshP10k ?? false,
 			terminalZdotdir: stateValues.terminalZdotdir ?? false,
 			terminalCompressProgressBar: stateValues.terminalCompressProgressBar ?? true,
-			mode: stateValues.mode ?? defaultModeSlug,
+			mode: resolvedMode,
 			language: stateValues.language ?? formatLanguage(vscode.env.language),
 			mcpEnabled: true, // kilocode_change: always true
 			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
-			currentApiConfigName: stateValues.currentApiConfigName ?? "default",
+			currentApiConfigName: resolvedCurrentApiConfigName,
 			listApiConfigMeta: stateValues.listApiConfigMeta ?? [],
 			pinnedApiConfigs: stateValues.pinnedApiConfigs ?? {},
 			modeApiConfigs: stateValues.modeApiConfigs ?? ({} as Record<Mode, string>),
@@ -3385,6 +3448,11 @@ export class ClineProvider
 	}
 
 	public async setMode(mode: string): Promise<void> {
+		if (this.renderContext === "editor") {
+			this.localMode = mode
+			return
+		}
+
 		await this.setValues({ mode })
 	}
 
