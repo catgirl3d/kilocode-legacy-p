@@ -50,7 +50,7 @@ jobs:
                   # Keep github.token for changesets/action API calls (push branch + create PR).
                   # Use CHANGESETS_GITHUB_TOKEN only inside versioning for changelog GitHub lookups.
                   version: >-
-                      node -e const{execFileSync}=require('child_process');const t=process.env.CHANGESETS_GITHUB_TOKEN;if(!t)throw new Error('CHANGESETS_GITHUB_TOKEN_not_set');const e={...process.env,GITHUB_TOKEN:t};execFileSync('node',['scripts/patch-changeset-config.cjs'],{stdio:'inherit',env:e});try{execFileSync('pnpm',['changeset:version'],{stdio:'inherit',env:e});}finally{execFileSync('git',['checkout','--','.changeset/config.json'],{stdio:'inherit'});}
+                      node -e process.env.CHANGESETS_GITHUB_TOKEN||((console.error('CHANGESETS_GITHUB_TOKEN_not_set')),process.exit(1));require('child_process').execFileSync('node',['scripts/patch-changeset-config.cjs'],{stdio:'inherit',env:{...process.env,GITHUB_TOKEN:process.env.CHANGESETS_GITHUB_TOKEN}});try{require('child_process').execFileSync('pnpm',['changeset:version'],{stdio:'inherit',env:{...process.env,GITHUB_TOKEN:process.env.CHANGESETS_GITHUB_TOKEN}})}finally{require('child_process').execFileSync('git',['checkout','--','.changeset/config.json'],{stdio:'inherit'})}
               env:
                   GITHUB_REPOSITORY: ${{ github.repository }}
                   GITHUB_TOKEN: ${{ github.token }}
