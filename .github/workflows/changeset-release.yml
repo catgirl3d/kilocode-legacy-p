@@ -47,6 +47,10 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: pnpm changeset:version # This performs the changeset version bump
+                  # Patch the repo after changesets/action checks out/resets its working branch,
+                  # otherwise the action's internal git reset discards any earlier config rewrite.
+                  version: >-
+                      node -e "const fs=require('fs'); const path='.changeset/config.json'; const config=JSON.parse(fs.readFileSync(path,'utf8')); config.changelog=['@changesets/changelog-github',{repo: process.env.GITHUB_REPOSITORY}]; fs.writeFileSync(path, JSON.stringify(config, null, '\t') + '\n');" && pnpm changeset:version
               env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
