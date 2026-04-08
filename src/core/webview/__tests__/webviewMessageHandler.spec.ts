@@ -1118,7 +1118,7 @@ describe("webviewMessageHandler - downloadErrorDiagnostics", () => {
 	})
 
 	it("shows error when no active task", async () => {
-		vi.mocked(mockClineProvider.getCurrentTask).mockReturnValue(null as any)
+		vi.mocked(mockClineProvider.getCurrentTask).mockReturnValue(undefined)
 
 		await webviewMessageHandler(mockClineProvider, {
 			type: "downloadErrorDiagnostics",
@@ -1163,7 +1163,7 @@ describe("webviewMessageHandler - executeStagedDiff", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks()
-		vi.mocked(mockClineProvider.getCurrentTask).mockReturnValue(null)
+		vi.mocked(mockClineProvider.getCurrentTask).mockReturnValue(undefined)
 	})
 
 	it("writes staged diff output and inserts the mention into chat", async () => {
