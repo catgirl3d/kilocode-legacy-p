@@ -47,6 +47,15 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: pnpm changeset:version # This performs the changeset version bump
+                  # Use CHANGESETS_GITHUB_TOKEN only for changelog enrichment during versioning.
+                  # Keep the default Actions token for branch push + PR creation, so PAT scope
+                  # mismatches do not break the PR API call.
+                  # Patch the repo after changesets/action checks out/resets its working branch,
+                  # otherwise the action's internal git reset discards any earlier config rewrite.
+                  # Restore the committed config afterwards so the temporary fork-specific patch
+                  # is not treated as a real change to commit.
+                  version: >-
+                      node scripts/patch-changeset-config.cjs && pnpm changeset:version && git checkout -- .changeset/config.json
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
