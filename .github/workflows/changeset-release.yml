@@ -8,7 +8,9 @@ on:
 
 env:
     REPO_PATH: ${{ github.repository }}
-    GIT_REF: main
+    # For normal pushes we only run on main; for manual workflow_dispatch runs use the
+    # selected ref so the workflow can be tested safely on a branch.
+    GIT_REF: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || 'main' }}
     NODE_VERSION: 20.20.0
     PNPM_VERSION: 10.8.1
 
@@ -47,6 +49,10 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: pnpm changeset:version # This performs the changeset version bump
+                  # Patch the repo after changesets/action checks out/resets its working branch,
+                  # otherwise the action's internal git reset discards any earlier config rewrite.
+                  version: >-
+                      node scripts/patch-changeset-config.cjs && pnpm changeset:version
               env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
