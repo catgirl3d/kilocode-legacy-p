@@ -1010,7 +1010,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// kilocode_change start: Review mode
 				case "askReviewScope":
 					setReviewScopeInfo(message.reviewScopeInfo ?? null)
-					setShowReviewScopeSelector(true)
+					if (message.reviewScopeInfo === undefined || showReviewScopeSelector) {
+						setShowReviewScopeSelector(true)
+					}
 					break
 				// kilocode_change end: Review mode
 			}
@@ -1023,6 +1025,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			isHidden,
 			sendingDisabled,
 			enableButtons,
+			showReviewScopeSelector,
 			handleChatReset,
 			handleSendMessage,
 			handleSetChatBoxMessage,
