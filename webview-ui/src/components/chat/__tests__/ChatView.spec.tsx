@@ -236,6 +236,29 @@ vi.mock("../ChatTextArea", () => {
 	}
 })
 
+vi.mock("../ReviewScopeSelector", () => ({
+	ReviewScopeSelector: function MockReviewScopeSelector({
+		open,
+		onOpenChange,
+		scopeInfo,
+	}: {
+		open: boolean
+		onOpenChange: (open: boolean) => void
+		scopeInfo: unknown
+	}) {
+		if (!open) {
+			return null
+		}
+
+		return (
+			<div data-testid="review-scope-selector">
+				<div data-testid="review-scope-info">{scopeInfo === null ? "loading" : "loaded"}</div>
+				<button onClick={() => onOpenChange(false)}>Close review scope</button>
+			</div>
+		)
+	},
+}))
+
 // Mock VSCode components
 vi.mock("@vscode/webview-ui-toolkit/react", () => ({
 	VSCodeButton: function MockVSCodeButton({
@@ -1155,5 +1178,88 @@ describe("ChatView - Context Condensing Indicator Tests", () => {
 			},
 			{ timeout: 2000 },
 		)
+	})
+})
+
+describe("ChatView - Review Scope Selector", () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	const reviewScopeInfo = {
+		uncommitted: {
+			available: true,
+			fileCount: 2,
+			filePreview: ["file-a.ts", "file-b.ts"],
+		},
+		branch: {
+			available: true,
+			currentBranch: "feature/test",
+			baseBranch: "main",
+			fileCount: 3,
+			filePreview: ["file-a.ts", "file-b.ts", "file-c.ts"],
+		},
+	}
+
+	const dispatchReviewScopeMessage = async (scopeInfo?: typeof reviewScopeInfo) => {
+		await act(async () => {
+			window.dispatchEvent(
+				new MessageEvent("message", {
+					data: {
+						type: "askReviewScope",
+						reviewScopeInfo: scopeInfo,
+					},
+				}),
+			)
+			await new Promise((resolve) => setTimeout(resolve, 0))
+		})
+	}
+
+	it("does not reopen the review scope selector after the user closes it during loading", async () => {
+		const { getByRole, getByTestId, queryByTestId } = renderChatView()
+
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 10))
+		})
+
+		await dispatchReviewScopeMessage(undefined)
+
+		await waitFor(() => {
+			expect(getByTestId("review-scope-selector")).toBeInTheDocument()
+			expect(getByTestId("review-scope-info")).toHaveTextContent("loading")
+		})
+
+		fireEvent.click(getByRole("button", { name: "Close review scope" }))
+
+		await waitFor(() => {
+			expect(queryByTestId("review-scope-selector")).not.toBeInTheDocument()
+		})
+
+		await dispatchReviewScopeMessage(reviewScopeInfo)
+
+		await waitFor(() => {
+			expect(queryByTestId("review-scope-selector")).not.toBeInTheDocument()
+		})
+	})
+
+	it("keeps the review scope selector open while loading hydrates into scope info", async () => {
+		const { getByTestId } = renderChatView()
+
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 10))
+		})
+
+		await dispatchReviewScopeMessage(undefined)
+
+		await waitFor(() => {
+			expect(getByTestId("review-scope-info")).toHaveTextContent("loading")
+		})
+
+		await dispatchReviewScopeMessage(reviewScopeInfo)
+
+		await waitFor(() => {
+			expect(getByTestId("review-scope-selector")).toBeInTheDocument()
+			expect(getByTestId("review-scope-info")).toHaveTextContent("loaded")
+		})
 	})
 })
