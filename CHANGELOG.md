@@ -1,5 +1,13 @@
 # kilo-code
 
+## 5.12.1
+
+### Patch Changes
+
+- [#1](https://github.com/catgirl3d/kilocode-legacy-p/pull/1) [`d304a33`](https://github.com/catgirl3d/kilocode-legacy-p/commit/d304a333e730e71967cab286b182b8049d2a48d6) Thanks [@catgirl3d](https://github.com/catgirl3d)! - feat(ui): add model badge to chat messages
+
+- [#2](https://github.com/catgirl3d/kilocode-legacy-p/pull/2) [`a685e5c`](https://github.com/catgirl3d/kilocode-legacy-p/commit/a685e5cea7236140ba089ec07bb9f9d526dea382) Thanks [@catgirl3d](https://github.com/catgirl3d)! - Improves editor tab isolation for mode and profile, and adds support for generating and inserting staged diffs into chat.
+
 ## 5.12.0
 
 ### Minor Changes
