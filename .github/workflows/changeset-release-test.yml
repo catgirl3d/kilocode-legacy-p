@@ -1,0 +1,137 @@
+name: Changeset Release Test
+
+on:
+    workflow_dispatch:
+        inputs:
+            mode:
+                description: "Run mode for testing changeset workflow on the selected branch"
+                required: true
+                default: "dry-run"
+                type: choice
+                options:
+                    - dry-run
+                    - commit-test
+                    - create-pr
+
+env:
+    REPO_PATH: ${{ github.repository }}
+    # Test workflow always runs against the branch selected in workflow_dispatch.
+    GIT_REF: ${{ github.ref_name }}
+    NODE_VERSION: 20.20.0
+    PNPM_VERSION: 10.8.1
+
+jobs:
+    changeset-dry-run:
+        if: ${{ github.event.inputs.mode == 'dry-run' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Git Checkout
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  ref: ${{ env.GIT_REF }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "pnpm"
+
+            - name: Install Dependencies
+              run: pnpm install
+
+            - name: Dry-run changeset versioning
+              run: |
+                  node scripts/patch-changeset-config.cjs
+                  pnpm changeset:version
+                  git checkout -- .changeset/config.json
+                  git status --short
+                  git diff -- src/package.json CHANGELOG.md src/CHANGELOG.md
+              env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+
+    changeset-commit-test:
+        if: ${{ github.event.inputs.mode == 'commit-test' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Git Checkout
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  ref: ${{ env.GIT_REF }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "pnpm"
+
+            - name: Install Dependencies
+              run: pnpm install
+
+            - name: Configure Git
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            - name: Commit-test changeset versioning without PR
+              run: |
+                  node scripts/patch-changeset-config.cjs
+                  pnpm changeset:version
+                  git checkout -- .changeset/config.json
+                  git status --short
+                  git add .
+                  git commit -m "changeset version bump"
+              env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+
+    changeset-pr-version-bump-test:
+        if: ${{ github.event.inputs.mode == 'create-pr' }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - name: Git Checkout
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  ref: ${{ env.GIT_REF }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: "pnpm"
+
+            - name: Install Dependencies
+              run: pnpm install
+
+            - name: Changeset Pull Request
+              id: changesets
+              uses: changesets/action@v1
+              with:
+                  commit: "changeset version bump"
+                  title: "Changeset version bump"
+                  version: >-
+                      node scripts/patch-changeset-config.cjs && pnpm changeset:version && git checkout -- .changeset/config.json
+              env:
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
