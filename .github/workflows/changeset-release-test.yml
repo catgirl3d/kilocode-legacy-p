@@ -14,7 +14,6 @@ on:
                     - create-pr
 
 env:
-    REPO_PATH: ${{ github.repository }}
     # Test workflow always runs against the branch selected in workflow_dispatch.
     GIT_REF: ${{ github.ref_name }}
     NODE_VERSION: 20.20.0
@@ -47,14 +46,11 @@ jobs:
 
             - name: Dry-run changeset versioning
               run: |
-                  node scripts/patch-changeset-config.cjs
                   pnpm changeset:version
-                  git checkout -- .changeset/config.json
                   git status --short
                   git diff -- src/package.json CHANGELOG.md src/CHANGELOG.md
               env:
-                  GITHUB_REPOSITORY: ${{ github.repository }}
-                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ github.token }}
 
     changeset-commit-test:
         if: ${{ github.event.inputs.mode == 'commit-test' }}
@@ -87,15 +83,12 @@ jobs:
 
             - name: Commit-test changeset versioning without PR
               run: |
-                  node scripts/patch-changeset-config.cjs
                   pnpm changeset:version
-                  git checkout -- .changeset/config.json
                   git status --short
                   git add .
                   git commit -m "changeset version bump"
               env:
-                  GITHUB_REPOSITORY: ${{ github.repository }}
-                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ github.token }}
 
     changeset-pr-version-bump-test:
         if: ${{ github.event.inputs.mode == 'create-pr' }}
@@ -130,8 +123,6 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: >-
-                      node scripts/patch-changeset-config.cjs && pnpm changeset:version && git checkout -- .changeset/config.json
+                  version: pnpm changeset:version
               env:
-                  GITHUB_REPOSITORY: ${{ github.repository }}
-                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ github.token }}
