@@ -1,5 +1,11 @@
 # kilo-code
 
+## 5.12.2
+
+### Patch Changes
+
+- [#18](https://github.com/catgirl3d/kilocode-legacy-p/pull/18) [`044b4bf`](https://github.com/catgirl3d/kilocode-legacy-p/commit/044b4bf4495256f0483586b84f0a9c7675495994) Thanks [@catgirl3d](https://github.com/catgirl3d)! - Fixed the review scope selector from reopening after being dismissed while review data is still loading.
+
 ## 5.12.1
 
 ### Patch Changes
