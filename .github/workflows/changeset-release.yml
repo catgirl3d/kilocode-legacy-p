@@ -47,6 +47,12 @@ jobs:
               with:
                   commit: "changeset version bump"
                   title: "Changeset version bump"
-                  version: pnpm changeset:version # This performs the changeset version bump
+                  # Patch the repo after changesets/action checks out/resets its working branch,
+                  # otherwise the action's internal git reset discards any earlier config rewrite.
+                  # Restore the committed config afterwards so the temporary fork-specific patch
+                  # is not treated as a real change to commit.
+                  version: >-
+                      node scripts/patch-changeset-config.cjs && pnpm changeset:version && git checkout -- .changeset/config.json
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_REPOSITORY: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
