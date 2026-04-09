@@ -86,6 +86,7 @@ import { AutocompleteServiceSettingsView } from "../kilocode/settings/Autocomple
 import { SlashCommandsSettings } from "./SlashCommandsSettings"
 import { UISettings } from "./UISettings"
 import AgentBehaviourView from "../kilocode/settings/AgentBehaviourView" // kilocode_change - new combined view
+import { WorktreesView } from "../worktrees/WorktreesView"
 // import ModesView from "../modes/ModesView" // kilocode_change - now used inside AgentBehaviourView
 // import McpView from "../mcp/McpView" // kilocode_change: own view
 import { SettingsSearch } from "./SettingsSearch"
@@ -115,6 +116,7 @@ export const sectionNames = [
 	"contextManagement",
 	"terminal",
 	"agentBehaviour", // kilocode_change - renamed from "modes" and merged with "mcp"
+	"worktrees",
 	// "modes",  // kilocode_change - now used inside AgentBehaviourView
 	// "mcp",  // kilocode_change - now used inside AgentBehaviourView
 	"prompts",
@@ -772,6 +774,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>((props, ref)
 			{ id: "notifications", icon: Bell },
 			{ id: "contextManagement", icon: Database },
 			{ id: "terminal", icon: SquareTerminal },
+			{ id: "worktrees", icon: GitBranch },
 			{ id: "prompts", icon: MessageSquare },
 			// { id: "ui", icon: Glasses }, // kilocode_change: we have our own display section
 			{ id: "experimental", icon: FlaskConical },
@@ -1257,6 +1260,9 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>((props, ref)
 						{/* kilocode_change: removed: Modes Section */}
 
 						{/*kilocode_change: removed: MCP Section */}
+
+						{/* Worktrees Section */}
+						{renderTab === "worktrees" && <WorktreesView />}
 
 						{/* Prompts Section */}
 						{renderTab === "prompts" && (

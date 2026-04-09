@@ -22,6 +22,7 @@ import type { McpServer } from "./mcp.js"
 import type { ModelRecord, RouterModels, ModelInfo } from "./model.js"
 import type { CommitRange } from "./kilocode/kilocode.js"
 import type { OpenAiCodexRateLimitInfo } from "./providers/openai-codex-rate-limits.js"
+import type { WorktreeIncludeStatus, Worktree } from "./worktree.js"
 
 // kilocode_change start: Type definitions for Kilo Code-specific features
 // SAP AI Core deployment types
@@ -270,6 +271,15 @@ export interface ExtensionMessage {
 		| "skillsData"
 		| "askReviewScope" // kilocode_change: Review mode scope selection
 		| "openAiCodexRateLimits"
+		// Worktree response messages
+		| "worktreeList"
+		| "worktreeResult"
+		| "branchList"
+		| "worktreeDefaults"
+		| "worktreeIncludeStatus"
+		| "branchWorktreeIncludeResult"
+		| "worktreeCopyProgress"
+		| "folderSelected"
 	text?: string
 	// kilocode_change start
 	completionRequestId?: string // Correlation ID from request
@@ -458,6 +468,32 @@ export interface ExtensionMessage {
 		childrenCost: number
 	}
 	historyItem?: HistoryItem
+	// Worktree response properties
+	worktrees?: Worktree[]
+	isGitRepo?: boolean
+	isMultiRoot?: boolean
+	isSubfolder?: boolean
+	gitRootPath?: string
+	worktreeResult?: {
+		success: boolean
+		message: string
+		worktree?: Worktree
+	}
+	localBranches?: string[]
+	remoteBranches?: string[]
+	currentBranch?: string
+	suggestedBranch?: string
+	suggestedPath?: string
+	worktreeIncludeExists?: boolean
+	worktreeIncludeStatus?: WorktreeIncludeStatus
+	hasGitignore?: boolean
+	gitignoreContent?: string
+	branch?: string
+	hasWorktreeInclude?: boolean
+	copyProgressBytesCopied?: number
+	copyProgressTotalBytes?: number
+	copyProgressItemName?: string
+	path?: string
 	// kilocode_change start: Review mode
 	reviewScopeInfo?: {
 		uncommitted: {
@@ -573,6 +609,8 @@ export type ExtensionState = Pick<
 	| "openRouterImageGenerationSelectedModel"
 	| "includeTaskHistoryInEnhance"
 	| "reasoningBlockCollapsed"
+	| "showWorktreesInHomeScreen"
+	| "worktreeAutoOpenPath"
 	| "enterBehavior"
 	| "includeCurrentTime"
 	| "includeCurrentCost"
@@ -983,6 +1021,18 @@ export interface WebviewMessage {
 		| "requestOpenAiCodexRateLimits"
 		| "refreshCustomTools"
 		| "requestModes"
+		// Worktree messages
+		| "listWorktrees"
+		| "createWorktree"
+		| "deleteWorktree"
+		| "switchWorktree"
+		| "getAvailableBranches"
+		| "getWorktreeDefaults"
+		| "getWorktreeIncludeStatus"
+		| "checkBranchWorktreeInclude"
+		| "createWorktreeInclude"
+		| "checkoutBranch"
+		| "browseForWorktreePath"
 		| "switchMode"
 		| "debugSetting"
 		| "refreshSkills"
@@ -1025,6 +1075,13 @@ export interface WebviewMessage {
 	notificationId?: string // kilocode_change
 	commandIds?: string[] // kilocode_change: For getKeybindings
 	// kilocode_change end
+	worktreePath?: string
+	worktreeBranch?: string
+	worktreeBaseBranch?: string
+	worktreeCreateNewBranch?: boolean
+	worktreeNewWindow?: boolean
+	worktreeForce?: boolean
+	worktreeIncludeContent?: string
 	serverName?: string
 	toolName?: string
 	alwaysAllow?: boolean

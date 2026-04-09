@@ -53,6 +53,9 @@ vi.mock("@src/components/ui", () => ({
 	TooltipProvider: ({ children }: any) => <>{children}</>,
 	TooltipTrigger: ({ children }: any) => <>{children}</>,
 	TooltipContent: ({ children }: any) => <div>{children}</div>,
+	ToggleSwitch: ({ checked, onChange }: any) => (
+		<input type="checkbox" checked={checked} onChange={() => onChange?.(!checked)} data-testid="toggle-switch" />
+	),
 }))
 
 // Mock ModesView and McpView since they're rendered during indexing

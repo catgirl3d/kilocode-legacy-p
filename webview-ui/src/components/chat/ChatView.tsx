@@ -52,6 +52,7 @@ import { CheckpointWarning } from "./CheckpointWarning"
 import { IdeaSuggestionsBox } from "../kilocode/chat/IdeaSuggestionsBox" // kilocode_change
 import { KilocodeNotifications } from "../kilocode/KilocodeNotifications" // kilocode_change
 import { QueuedMessages } from "./QueuedMessages"
+import { WorktreeSelector } from "./WorktreeSelector"
 import { ReviewScopeSelector, type ReviewScopeInfo } from "./ReviewScopeSelector" // kilocode_change: Review mode
 import { buildDocLink } from "@/utils/docLinks"
 // import DismissibleUpsell from "../common/DismissibleUpsell" // kilocode_change: unused
@@ -131,6 +132,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		messageQueue = [],
 		sendMessageOnEnter, // kilocode_change
 		isBrowserSessionActive,
+		showWorktreesInHomeScreen,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -1782,6 +1784,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			//    This ensures it takes its natural height when there's space
 			//    but becomes scrollable when the viewport is too small
 			*/}
+			{!task && showWorktreesInHomeScreen && <WorktreeSelector />}
+
 			{/* kilocode_change: added settings toggle for this */}
 			{!task && showAutoApproveMenu && (
 				<div className="mb-1 flex-initial min-h-0">

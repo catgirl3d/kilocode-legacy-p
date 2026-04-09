@@ -55,6 +55,9 @@ vi.mock("@src/components/ui", () => ({
 	Popover: ({ children }: any) => <>{children}</>,
 	PopoverTrigger: ({ children }: any) => <>{children}</>,
 	PopoverContent: ({ children }: any) => <div>{children}</div>,
+	ToggleSwitch: ({ checked, onChange }: any) => (
+		<input type="checkbox" checked={checked} onChange={() => onChange?.(!checked)} data-testid="toggle-switch" />
+	),
 }))
 
 // Mock ModesView and McpView since they're rendered during indexing

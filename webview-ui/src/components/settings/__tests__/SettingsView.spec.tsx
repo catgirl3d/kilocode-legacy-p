@@ -241,6 +241,9 @@ vi.mock("@/components/ui", () => ({
 	CollapsibleContent: ({ children, className }: any) => (
 		<div className={`collapsible-content-mock ${className || ""}`}>{children}</div>
 	),
+	ToggleSwitch: ({ checked, onChange }: any) => (
+		<input type="checkbox" checked={checked} onChange={() => onChange?.(!checked)} data-testid="toggle-switch" />
+	),
 }))
 
 // Mock window.postMessage to trigger state hydration

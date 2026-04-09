@@ -238,6 +238,16 @@ export const globalSettingsSchema = z.object({
 	historyPreviewCollapsed: z.boolean().optional(),
 	reasoningBlockCollapsed: z.boolean().optional(),
 	/**
+	 * Path to worktree to auto-open after switching workspaces.
+	 * Used by the worktree feature to reopen the KiloCode sidebar in a new window.
+	 */
+	worktreeAutoOpenPath: z.string().optional(),
+	/**
+	 * Whether to show the worktree selector in the home screen.
+	 * @default true
+	 */
+	showWorktreesInHomeScreen: z.boolean().optional(),
+	/**
 	 * Controls the keyboard behavior for sending messages in the chat input.
 	 * - "send": Enter sends message, Shift+Enter creates newline (default)
 	 * - "newline": Enter creates newline, Shift+Enter/Ctrl+Enter sends message
