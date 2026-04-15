@@ -729,6 +729,33 @@ export class ClineProvider
 		return findLast(Array.from(this.activeInstances), (instance) => instance.view?.visible === true)
 	}
 
+	// kilocode_change start: route title-bar commands to the correct provider instance
+	public static getSidebarInstance(): ClineProvider | undefined {
+		return findLast(
+			Array.from(this.activeInstances),
+			(instance) => instance.renderContext === "sidebar" && instance.view !== undefined,
+		)
+	}
+
+	public static getActiveEditorInstance(): ClineProvider | undefined {
+		const instances = Array.from(this.activeInstances)
+		const activeEditor = findLast(
+			instances,
+			(instance) =>
+				instance.renderContext === "editor" &&
+				!!instance.view &&
+				"active" in instance.view &&
+				instance.view.active === true,
+		)
+
+		if (activeEditor) {
+			return activeEditor
+		}
+
+		return findLast(instances, (instance) => instance.renderContext === "editor" && instance.view?.visible === true)
+	}
+	// kilocode_change end
+
 	public static async getInstance(): Promise<ClineProvider | undefined> {
 		let visibleProvider = ClineProvider.getVisibleInstance()
 
