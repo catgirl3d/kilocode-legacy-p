@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { API } from "../extension/api"
 import * as ProfileValidatorMod from "../shared/ProfileValidator"
+import { webviewMessageHandler } from "../core/webview/webviewMessageHandler"
 
 vi.mock("@roo-code/telemetry", () => ({
 	TelemetryService: {
@@ -322,4 +323,42 @@ describe("Single-open-task invariant", () => {
 		expect(removeClineFromStack).toHaveBeenCalledTimes(1)
 		expect(addClineToStack).toHaveBeenCalledTimes(1)
 	})
+
+	// kilocode_change start: editor-local profile saves must use provider-local active state
+	it("Editor profile save refreshes the provider-local active profile even when global state points elsewhere", async () => {
+		const upsertProviderProfile = vi.fn().mockResolvedValue(undefined)
+
+		const provider = {
+			renderContext: "editor",
+			getState: vi.fn().mockResolvedValue({ currentApiConfigName: "alt" }),
+			upsertProviderProfile,
+			postStateToWebview: vi.fn().mockResolvedValue(undefined),
+			log: vi.fn(),
+			providerSettingsManager: {
+				getProfile: vi.fn().mockRejectedValue(new Error("profile not found in test")),
+			},
+			contextProxy: {
+				getValue: vi.fn((key: string) => (key === "currentApiConfigName" ? "default" : undefined)),
+			},
+		} as unknown as ClineProvider
+
+		await webviewMessageHandler(provider, {
+			type: "upsertApiConfiguration",
+			text: "alt",
+			apiConfiguration: {
+				apiProvider: "anthropic",
+				apiModelId: "claude-3-7-sonnet-20250219",
+			},
+		} as any)
+
+		expect(upsertProviderProfile).toHaveBeenCalledWith(
+			"alt",
+			expect.objectContaining({
+				apiProvider: "anthropic",
+				apiModelId: "claude-3-7-sonnet-20250219",
+			}),
+			true,
+		)
+	})
+	// kilocode_change end
 })

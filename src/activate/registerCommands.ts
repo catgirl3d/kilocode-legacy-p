@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import delay from "delay"
 
-import type { CommandId } from "@roo-code/types"
+import type { CommandId, ExtensionMessage } from "@roo-code/types"
 import { TelemetryService } from "@roo-code/telemetry"
 
 import { getCommand } from "../utils/commands"
@@ -31,6 +31,54 @@ export function getVisibleProviderOrLog(outputChannel: vscode.OutputChannel): Cl
 	}
 	return visibleProvider
 }
+
+// kilocode_change start: resolve title-bar commands against the correct provider instance
+export function getSidebarProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
+	const sidebarProvider = ClineProvider.getSidebarInstance()
+	if (!sidebarProvider) {
+		outputChannel.appendLine("Cannot find the Kilo Code sidebar instance.")
+		return undefined
+	}
+	return sidebarProvider
+}
+
+export function getActiveEditorProviderOrLog(outputChannel: vscode.OutputChannel): ClineProvider | undefined {
+	const editorProvider = ClineProvider.getActiveEditorInstance()
+	if (!editorProvider) {
+		outputChannel.appendLine("Cannot find any active Kilo Code editor instances.")
+		return undefined
+	}
+	return editorProvider
+}
+
+async function getRoutedProviderOrLog(outputChannel: vscode.OutputChannel): Promise<ClineProvider | undefined> {
+	const activeEditorProvider = ClineProvider.getActiveEditorInstance()
+	if (activeEditorProvider) {
+		return activeEditorProvider
+	}
+
+	const visibleProvider = await ClineProvider.getInstance()
+	if (!visibleProvider) {
+		outputChannel.appendLine("Cannot find any visible Kilo Code instances.")
+		return undefined
+	}
+
+	return visibleProvider
+}
+
+async function startNewTaskInProvider(targetProvider: ClineProvider) {
+	await targetProvider.removeClineFromStack()
+	await targetProvider.refreshWorkspace()
+	await targetProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
+	await targetProvider.postMessageToWebview({ type: "action", action: "focusInput" })
+}
+
+type WebviewAction = NonNullable<ExtensionMessage["action"]>
+
+async function postActionToProvider(targetProvider: ClineProvider, action: WebviewAction) {
+	await targetProvider.postMessageToWebview({ type: "action", action })
+}
+// kilocode_change end
 
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined
@@ -90,101 +138,203 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 	}
 }
 
-const getCommandsMap = ({ context, outputChannel }: RegisterCommandOptions): Record<CommandId, any> => ({
+const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions): Record<CommandId, any> => ({
 	activationCompleted: () => {},
 	// kilocode_change start
 	agentManagerOpen: () => {
 		agentManagerProvider?.openPanel()
 	},
 	// kilocode_change end
-	cloudButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
-
-		if (!visibleProvider) {
+	cloudButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
 		TelemetryService.instance.captureTitleButtonClicked("cloud")
 
-		visibleProvider.postMessageToWebview({ type: "action", action: "cloudButtonClicked" })
+		return postActionToProvider(targetProvider, "cloudButtonClicked")
 	},
 	plusButtonClicked: async () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
-
-		if (!visibleProvider) {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
 		TelemetryService.instance.captureTitleButtonClicked("plus")
 
-		await visibleProvider.removeClineFromStack()
-		await visibleProvider.refreshWorkspace()
-		await visibleProvider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-		// Send focusInput action immediately after chatButtonClicked
-		// This ensures the focus happens after the view has switched
-		await visibleProvider.postMessageToWebview({ type: "action", action: "focusInput" })
+		await startNewTaskInProvider(targetProvider)
 	},
-	popoutButtonClicked: () => {
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarPlusButtonClicked: async () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("plus")
+
+		await startNewTaskInProvider(sidebarProvider)
+	},
+	// kilocode_change end
+	// kilocode_change start: editor title commands must target the active editor provider instance
+	editorPlusButtonClicked: async () => {
+		const editorProvider = getActiveEditorProviderOrLog(outputChannel)
+
+		if (!editorProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("plus")
+
+		await startNewTaskInProvider(editorProvider)
+	},
+	// kilocode_change end
+	popoutButtonClicked: async () => {
+		const sourceProvider = await getRoutedProviderOrLog(outputChannel)
 		TelemetryService.instance.captureTitleButtonClicked("popout")
 
-		return openClineInNewTab({ context, outputChannel })
+		return openClineInNewTab({ context, outputChannel, sourceProvider })
 	},
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarPopoutButtonClicked: () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("popout")
+
+		return openClineInNewTab({ context, outputChannel, sourceProvider: sidebarProvider })
+	},
+	// kilocode_change end
 	open: () => openClineInNewTab({ context, outputChannel }), // kilocode_change
 	openInNewTab: () => openClineInNewTab({ context, outputChannel }),
-	settingsButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
-
-		if (!visibleProvider) {
+	settingsButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
 		TelemetryService.instance.captureTitleButtonClicked("settings")
 
-		visibleProvider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
+		postActionToProvider(targetProvider, "settingsButtonClicked")
 		// Also explicitly post the visibility message to trigger scroll reliably
-		visibleProvider.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+		return postActionToProvider(targetProvider, "didBecomeVisible")
 	},
-	historyButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarSettingsButtonClicked: () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
 
-		if (!visibleProvider) {
+		TelemetryService.instance.captureTitleButtonClicked("settings")
+
+		postActionToProvider(sidebarProvider, "settingsButtonClicked")
+		return postActionToProvider(sidebarProvider, "didBecomeVisible")
+	},
+	// kilocode_change end
+	// kilocode_change start: editor title commands must target the active editor provider instance
+	editorSettingsButtonClicked: () => {
+		const editorProvider = getActiveEditorProviderOrLog(outputChannel)
+
+		if (!editorProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("settings")
+
+		postActionToProvider(editorProvider, "settingsButtonClicked")
+		return postActionToProvider(editorProvider, "didBecomeVisible")
+	},
+	// kilocode_change end
+	historyButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
 		TelemetryService.instance.captureTitleButtonClicked("history")
 
-		visibleProvider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
+		return postActionToProvider(targetProvider, "historyButtonClicked")
 	},
-	// kilocode_change begin
-	promptsButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarHistoryButtonClicked: () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
 
-		if (!visibleProvider) {
+		TelemetryService.instance.captureTitleButtonClicked("history")
+
+		return postActionToProvider(sidebarProvider, "historyButtonClicked")
+	},
+	// kilocode_change end
+	// kilocode_change start: editor title commands must target the active editor provider instance
+	editorHistoryButtonClicked: () => {
+		const editorProvider = getActiveEditorProviderOrLog(outputChannel)
+
+		if (!editorProvider) {
+			return
+		}
+
+		TelemetryService.instance.captureTitleButtonClicked("history")
+
+		return postActionToProvider(editorProvider, "historyButtonClicked")
+	},
+	// kilocode_change end
+	// kilocode_change begin
+	promptsButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
 		TelemetryService.instance.captureTitleButtonClicked("prompts")
 
-		visibleProvider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
+		return postActionToProvider(targetProvider, "promptsButtonClicked")
 	},
-	profileButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
-
-		if (!visibleProvider) {
+	profileButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
 			return
 		}
 
-		visibleProvider.postMessageToWebview({ type: "action", action: "profileButtonClicked" })
+		return postActionToProvider(targetProvider, "profileButtonClicked")
 	},
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarProfileButtonClicked: () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
+
+		return postActionToProvider(sidebarProvider, "profileButtonClicked")
+	},
+	// kilocode_change end
 	helpButtonClicked: () => {
 		vscode.env.openExternal(vscode.Uri.parse(getAppUrl()))
 	},
 	// kilocode_change end
-	marketplaceButtonClicked: () => {
-		const visibleProvider = getVisibleProviderOrLog(outputChannel)
-		if (!visibleProvider) return
-		visibleProvider.postMessageToWebview({ type: "action", action: "marketplaceButtonClicked" })
+	marketplaceButtonClicked: async () => {
+		const targetProvider = await getRoutedProviderOrLog(outputChannel)
+		if (!targetProvider) {
+			return
+		}
+
+		return postActionToProvider(targetProvider, "marketplaceButtonClicked")
 	},
+	// kilocode_change start: sidebar title commands must target the sidebar provider instance
+	sidebarMarketplaceButtonClicked: () => {
+		const sidebarProvider = getSidebarProviderOrLog(outputChannel)
+		if (!sidebarProvider) {
+			return
+		}
+
+		return postActionToProvider(sidebarProvider, "marketplaceButtonClicked")
+	},
+	// kilocode_change end
 	showHumanRelayDialog: (params: { requestId: string; promptText: string }) => {
 		const panel = getPanel()
 
@@ -303,14 +453,19 @@ const getCommandsMap = ({ context, outputChannel }: RegisterCommandOptions): Rec
 	},
 })
 
-export const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+export const openClineInNewTab = async ({
+	context,
+	outputChannel,
+	sourceProvider,
+}: Omit<RegisterCommandOptions, "provider"> & { sourceProvider?: ClineProvider }) => {
 	// (This example uses webviewProvider activation event which is necessary to
 	// deserialize cached webview, but since we use retainContextWhenHidden, we
 	// don't need to use that event).
 	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 	const contextProxy = await ContextProxy.getInstance(context)
 	const codeIndexManager = CodeIndexManager.getInstance(context)
-	const sourceProvider = ClineProvider.getVisibleInstance()
+	const sourceProviderToClone =
+		sourceProvider ?? ClineProvider.getActiveEditorInstance() ?? ClineProvider.getVisibleInstance()
 
 	// Get the existing MDM service instance to ensure consistent policy enforcement
 	let mdmService: MdmService | undefined
@@ -322,8 +477,8 @@ export const openClineInNewTab = async ({ context, outputChannel }: Omit<Registe
 	}
 
 	const tabProvider = new ClineProvider(context, outputChannel, "editor", contextProxy, mdmService)
-	if (sourceProvider) {
-		await tabProvider.cloneViewStateFrom(sourceProvider)
+	if (sourceProviderToClone) {
+		await tabProvider.cloneViewStateFrom(sourceProviderToClone)
 	}
 	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 

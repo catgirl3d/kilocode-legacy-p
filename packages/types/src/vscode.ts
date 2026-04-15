@@ -31,13 +31,21 @@ export const commandIds = [
 	"activationCompleted",
 
 	"plusButtonClicked",
+	"sidebarPlusButtonClicked",
+	"editorPlusButtonClicked",
 	"promptsButtonClicked",
 
 	"historyButtonClicked",
+	"sidebarHistoryButtonClicked",
+	"editorHistoryButtonClicked",
 	"marketplaceButtonClicked",
+	"sidebarMarketplaceButtonClicked",
 	"popoutButtonClicked",
+	"sidebarPopoutButtonClicked",
 	"cloudButtonClicked",
 	"settingsButtonClicked",
+	"sidebarSettingsButtonClicked",
+	"editorSettingsButtonClicked",
 
 	"openInNewTab",
 	"open", // kilocode_change
@@ -56,6 +64,7 @@ export const commandIds = [
 	// "focusInput", // kilocode_change
 	"acceptInput",
 	"profileButtonClicked", // kilocode_change
+	"sidebarProfileButtonClicked", // kilocode_change
 	"helpButtonClicked", // kilocode_change
 	"focusChatInput", // kilocode_change
 	"importSettings", // kilocode_change

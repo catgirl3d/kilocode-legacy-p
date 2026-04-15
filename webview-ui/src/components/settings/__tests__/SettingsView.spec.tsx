@@ -1,6 +1,6 @@
 // pnpm --filter @roo-code/vscode-webview test src/components/settings/__tests__/SettingsView.spec.tsx
 
-import { render, screen, fireEvent, within } from "@/utils/test-utils"
+import { render, screen, fireEvent, within, waitFor } from "@/utils/test-utils"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { vscode } from "@/utils/vscode"
@@ -267,14 +267,17 @@ const mockPostMessage = (state: any) => {
 }
 
 // kilocode_change on next line, initial state initialization to work with localized checkboxes
-const renderSettingsView = (initialState = {}) => {
+const renderSettingsView = (
+	initialState = {},
+	settingsViewProps: Partial<{ targetSection: string; editingProfile: string }> = {},
+) => {
 	const onDone = vi.fn()
 	const queryClient = new QueryClient()
 
 	const result = render(
 		<ExtensionStateContextProvider>
 			<QueryClientProvider client={queryClient}>
-				<SettingsView onDone={onDone} />
+				<SettingsView onDone={onDone} {...settingsViewProps} />
 			</QueryClientProvider>
 		</ExtensionStateContextProvider>,
 	)
@@ -289,7 +292,7 @@ const renderSettingsView = (initialState = {}) => {
 		result.rerender(
 			<ExtensionStateContextProvider>
 				<QueryClientProvider client={queryClient}>
-					<SettingsView onDone={onDone} targetSection={tabId} />
+					<SettingsView onDone={onDone} {...settingsViewProps} targetSection={tabId} />
 				</QueryClientProvider>
 			</ExtensionStateContextProvider>,
 		)
@@ -501,6 +504,36 @@ describe("SettingsView - API Configuration", () => {
 
 		expect(screen.getByTestId("api-config-management")).toBeInTheDocument()
 	})
+
+	// kilocode_change start: editor-tab settings should save back into the editing profile
+	it("saves provider changes back to the editing profile when settings open for an editor tab", async () => {
+		const editingProfile = "editor-tab-profile"
+		const { activateTab, getSettingsContent } = renderSettingsView(
+			{ currentApiConfigName: "default" },
+			{ editingProfile },
+		)
+
+		await waitFor(() => {
+			expect(screen.getByText(`Current config: ${editingProfile}`)).toBeInTheDocument()
+		})
+
+		activateTab("notifications")
+
+		const content = getSettingsContent()
+		const soundCheckbox = within(content).getByTestId("sound-enabled-checkbox")
+		fireEvent.click(soundCheckbox)
+
+		const saveButton = screen.getByTestId("save-button")
+		fireEvent.click(saveButton)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "upsertApiConfiguration",
+				text: editingProfile,
+			}),
+		)
+	})
+	// kilocode_change end
 })
 
 describe("SettingsView - Allowed Commands", () => {
