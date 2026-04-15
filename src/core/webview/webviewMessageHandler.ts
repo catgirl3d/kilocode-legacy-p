@@ -2484,9 +2484,9 @@ export const webviewMessageHandler = async (
 					// Config might not exist yet, that's fine
 				}
 
-				// kilocode_change start: If we're updating the active profile, we need to activate it to ensure it's persisted
-				const currentApiConfigName = getGlobalState("currentApiConfigName") || "default"
-				const isActiveProfile = message.text === currentApiConfigName
+				// kilocode_change start: respect editor-local active profile when persisting profile changes
+				const { currentApiConfigName: activeApiConfigName = "default" } = await provider.getState()
+				const isActiveProfile = message.text === activeApiConfigName
 				await provider.upsertProviderProfile(message.text, configToSave, isActiveProfile) // Activate if it's the current active profile
 				vscode.commands.executeCommand("kilo-code.autocomplete.reload")
 				// kilocode_change end
