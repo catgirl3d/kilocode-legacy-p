@@ -1,5 +1,13 @@
 # kilo-code
 
+## 5.14.1
+
+### Patch Changes
+
+- [#20](https://github.com/catgirl3d/kilocode-legacy-p/pull/20) [`11273cb`](https://github.com/catgirl3d/kilocode-legacy-p/commit/11273cb0540c14e18264e44551fb9b18321108a5) Thanks [@catgirl3d](https://github.com/catgirl3d)! - Fixed editor tabs so profile and model changes update immediately without reopening the tab, and fixed title-bar actions to target the correct chat instance.
+
+- [#22](https://github.com/catgirl3d/kilocode-legacy-p/pull/22) [`b43dcdb`](https://github.com/catgirl3d/kilocode-legacy-p/commit/b43dcdbd371e9f4296e5f52eaf40763953a87f54) Thanks [@catgirl3d](https://github.com/catgirl3d)! - Remove model stats fetch from the model info view since the backing endpoint has been retired.
+
 ## 5.14.0
 
 ### Minor Changes
