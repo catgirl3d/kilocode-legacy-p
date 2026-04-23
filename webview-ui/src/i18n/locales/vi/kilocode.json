@@ -7,7 +7,7 @@
 		},
 		"premiumModels": {
 			"title": "Mô hình cao cấp",
-			"description": "Đăng ký. Người dùng mới nhận $2,50 tín dụng"
+			"description": "Đăng ký và truy cập các mô hình cao cấp"
 		},
 		"byok": {
 			"title": "Sử dụng khóa của bạn",
@@ -18,7 +18,7 @@
 		"greeting": "Chào mừng bạn đến với Kilo Code!",
 		"introText1": "Kilo Code là một agent lập trình AI miễn phí và mã nguồn mở.",
 		"introText2": "Hoạt động với các mô hình AI mới nhất như Claude Opus 4.5, Gemini 3 Pro, GPT-5.2, và hơn 450 mô hình khác.",
-		"introText3": "Tạo tài khoản miễn phí và nhận $20 tín dụng thưởng khi nạp tiền lần đầu.",
+		"introText3": "Tạo tài khoản miễn phí để bắt đầu.",
 		"ctaButton": "Bắt đầu",
 		"manualModeButton": "Sử dụng khóa API của riêng bạn",
 		"alreadySignedUp": "Đã đăng ký?",
@@ -108,7 +108,6 @@
 		"modelInfo": {
 			"contextWindow": "Cửa sổ ngữ cảnh",
 			"providerBreakdown": "Phân tích Giá và Khả năng của Nhà cung cấp",
-			"averageKiloCodeCost": "Đây là chi phí thực tế trung bình mà Kilo Code đã chi tiêu khi sử dụng mô hình này trong tuần qua. Chi phí này có thể thấp hơn giá niêm yết do việc sử dụng bộ nhớ đệm prompt.",
 			"table": {
 				"provider": "Nhà cung cấp",
 				"context": "Điểm cuối có thể xử lý số lượng token này (đầu vào + đầu ra).",

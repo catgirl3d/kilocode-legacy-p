@@ -1,5 +1,17 @@
 # kilo-code
 
+## 5.14.0
+
+### Minor Changes
+
+- [#125](https://github.com/Kilo-Org/kilocode-legacy/pull/125) [`5eb9271`](https://github.com/Kilo-Org/kilocode-legacy/commit/5eb9271b89a09d893c1812ba0ecc640b1a567938) Thanks [@kilo-code-bot](https://github.com/apps/kilo-code-bot)! - Add support for Kimi K2.6 on Moonshot and Fireworks providers
+
+## 5.13.0
+
+### Minor Changes
+
+- [#108](https://github.com/Kilo-Org/kilocode-legacy/pull/108) [`3c215d2`](https://github.com/Kilo-Org/kilocode-legacy/commit/3c215d2c9ef52cd6ad5bac6c09a405eae7f0a7c7) Thanks [@kilo-code-bot](https://github.com/apps/kilo-code-bot)! - Add Claude Opus 4.7 support and new Extra High output verbosity level
+
 ## 5.12.2
 
 ### Patch Changes

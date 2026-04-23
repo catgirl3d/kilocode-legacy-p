@@ -7,7 +7,7 @@
 		},
 		"premiumModels": {
 			"title": "Modelos premium",
-			"description": "Cadastre-se. Novos usuários recebem US$ 2,50 em créditos"
+			"description": "Cadastre-se e tenha acesso a modelos premium"
 		},
 		"byok": {
 			"title": "Traga sua própria chave",
@@ -18,7 +18,7 @@
 		"greeting": "Bem-vindo ao Kilo Code!",
 		"introText1": "Kilo Code é um agente de codificação AI gratuito e de código aberto.",
 		"introText2": "Funciona com os mais recentes modelos de IA como Claude Opus 4.5, Gemini 3 Pro, GPT-5.2, e mais de 450 outros.",
-		"introText3": "Crie uma conta gratuita e receba $20 em créditos bônus ao recarregar pela primeira vez.",
+		"introText3": "Crie uma conta gratuita para começar.",
 		"ctaButton": "Começar",
 		"manualModeButton": "Use sua própria chave de API",
 		"alreadySignedUp": "Já se cadastrou?",
@@ -96,7 +96,6 @@
 		"modelInfo": {
 			"contextWindow": "Janela de contexto",
 			"providerBreakdown": "Detalhamento de Preços e Capacidades do Provedor",
-			"averageKiloCodeCost": "Este é o valor médio realmente gasto pelo Kilo Code usando este modelo na última semana. Pode ser menor que o preço listado devido à utilização do cache de prompts.",
 			"table": {
 				"provider": "Provedor",
 				"context": "O endpoint pode processar este número de tokens (entrada + saída).",
