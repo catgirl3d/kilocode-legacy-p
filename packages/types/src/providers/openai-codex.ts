@@ -16,7 +16,7 @@ import type { ModelInfo } from "../model.js"
 
 export type OpenAiCodexModelId = keyof typeof openAiCodexModels
 
-export const openAiCodexDefaultModelId: OpenAiCodexModelId = "gpt-5.3-codex"
+export const openAiCodexDefaultModelId: OpenAiCodexModelId = "gpt-5.5"
 
 /**
  * Models available through the Codex OAuth flow.
@@ -147,7 +147,7 @@ export const openAiCodexModels = {
 		excludedTools: ["apply_diff", "write_to_file"],
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: ["none", "low", "medium", "high", "xhigh"],
+		supportsReasoningEffort: ["low", "medium", "high", "xhigh"],
 		reasoningEffort: "medium",
 		inputPrice: 0,
 		outputPrice: 0,
@@ -195,13 +195,13 @@ export const openAiCodexModels = {
 		excludedTools: ["apply_diff", "write_to_file"],
 		supportsImages: true,
 		supportsPromptCache: true,
-		supportsReasoningEffort: ["none", "low", "medium", "high", "xhigh"],
+		supportsReasoningEffort: ["low", "medium", "high", "xhigh"],
 		reasoningEffort: "medium",
 		inputPrice: 0,
 		outputPrice: 0,
 		supportsVerbosity: true,
 		supportsTemperature: false,
-		description: "GPT-5.4: OpenAI's previous-generation high-capability model via ChatGPT subscription",
+		description: "GPT-5.4: Strong model for coding, reasoning, and long-context tasks via ChatGPT subscription",
 	},
 	"gpt-5.4-mini": {
 		maxTokens: 128000,
@@ -219,7 +219,7 @@ export const openAiCodexModels = {
 		supportsVerbosity: true,
 		supportsTemperature: false,
 		description:
-			"GPT-5.4 Mini: Faster GPT-5.4-class model for coding, computer use, and subagents via ChatGPT subscription",
+			"GPT-5.4 Mini: Faster, lower-cost model for lighter coding tasks and subagents via ChatGPT subscription",
 	},
 	"gpt-5.5": {
 		maxTokens: 128000,
@@ -236,7 +236,6 @@ export const openAiCodexModels = {
 		outputPrice: 0,
 		supportsVerbosity: true,
 		supportsTemperature: false,
-		description:
-			"GPT-5.5: High-capability model for complex coding, reasoning, and agentic workflows via ChatGPT subscription",
+		description: "GPT-5.5: Latest frontier model for agentic coding via ChatGPT subscription",
 	},
 } as const satisfies Record<string, ModelInfo>
