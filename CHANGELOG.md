@@ -1,5 +1,11 @@
 # kilo-code
 
+## 5.14.2
+
+### Patch Changes
+
+- [#23](https://github.com/catgirl3d/kilocode-legacy-p/pull/23) [`5435019`](https://github.com/catgirl3d/kilocode-legacy-p/commit/543501907cc4660084e45cf60e8e041e00fd3de6) Thanks [@catgirl3d](https://github.com/catgirl3d)! - Update OpenAI and ChatGPT Plus model listings for GPT-5.5 and GPT-5.4 variants.
+
 ## 5.14.1
 
 ### Patch Changes
