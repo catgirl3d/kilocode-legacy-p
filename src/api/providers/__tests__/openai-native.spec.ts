@@ -237,8 +237,53 @@ describe("OpenAiNativeHandler", () => {
 			expect(modelInfo.info.maxTokens).toBe(128000)
 			expect(modelInfo.info.contextWindow).toBe(1_050_000)
 			expect(modelInfo.info.supportsVerbosity).toBe(true)
-			expect(modelInfo.info.supportsReasoningEffort).toEqual(["none", "low", "medium", "high", "xhigh"])
-			expect(modelInfo.info.reasoningEffort).toBe("none")
+			expect(modelInfo.info.supportsReasoningEffort).toEqual(["low", "medium", "high", "xhigh"])
+			expect(modelInfo.info.reasoningEffort).toBe("medium")
+		})
+
+		it("should return GPT-5.5 model info when selected", () => {
+			const gpt55Handler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5.5",
+			})
+
+			const modelInfo = gpt55Handler.getModel()
+			expect(modelInfo.id).toBe("gpt-5.5")
+			expect(modelInfo.info.maxTokens).toBe(128000)
+			expect(modelInfo.info.contextWindow).toBe(400000)
+			expect(modelInfo.info.supportsVerbosity).toBe(true)
+			expect(modelInfo.info.supportsReasoningEffort).toEqual(["low", "medium", "high", "xhigh"])
+			expect(modelInfo.info.reasoningEffort).toBe("medium")
+		})
+
+		it("should return GPT-5.4 Mini model info when selected", () => {
+			const gpt54MiniHandler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5.4-mini",
+			})
+
+			const modelInfo = gpt54MiniHandler.getModel()
+			expect(modelInfo.id).toBe("gpt-5.4-mini")
+			expect(modelInfo.info.maxTokens).toBe(128000)
+			expect(modelInfo.info.contextWindow).toBe(400000)
+			expect(modelInfo.info.supportsVerbosity).toBe(true)
+			expect(modelInfo.info.supportsReasoningEffort).toEqual(["low", "medium", "high", "xhigh"])
+			expect(modelInfo.info.reasoningEffort).toBe("medium")
+		})
+
+		it("should return GPT-5.4 Nano model info when selected", () => {
+			const gpt54NanoHandler = new OpenAiNativeHandler({
+				...mockOptions,
+				apiModelId: "gpt-5.4-nano",
+			})
+
+			const modelInfo = gpt54NanoHandler.getModel()
+			expect(modelInfo.id).toBe("gpt-5.4-nano")
+			expect(modelInfo.info.maxTokens).toBe(128000)
+			expect(modelInfo.info.contextWindow).toBe(400000)
+			expect(modelInfo.info.supportsVerbosity).toBe(true)
+			expect(modelInfo.info.supportsReasoningEffort).toEqual(["low", "medium", "high", "xhigh"])
+			expect(modelInfo.info.reasoningEffort).toBe("medium")
 		})
 
 		it("should return GPT-5.3 Chat model info when selected", () => {
@@ -267,6 +312,9 @@ describe("OpenAiNativeHandler", () => {
 			// Test that all models have defaultToolProtocol: native
 			const testModels = [
 				"gpt-5.1-codex-max",
+				"gpt-5.5",
+				"gpt-5.4-mini",
+				"gpt-5.4-nano",
 				"gpt-5.2",
 				"gpt-5.2-codex",
 				"gpt-5.1",
@@ -432,7 +480,7 @@ describe("OpenAiNativeHandler", () => {
 			expect(parsedBody.max_output_tokens).toBe(128000)
 			expect(parsedBody.temperature).toBeUndefined()
 			expect(parsedBody.include).toEqual(["reasoning.encrypted_content"])
-			expect(parsedBody.reasoning?.effort).toBe("none")
+			expect(parsedBody.reasoning?.effort).toBe("medium")
 			expect(parsedBody.text?.verbosity).toBe("medium")
 
 			const textChunks = chunks.filter((chunk) => chunk.type === "text")
